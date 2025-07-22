@@ -36,6 +36,7 @@ export const baseColors = {
 
 // Theme sáng
 export const lightTheme = {
+  ...baseColors,
   primary: baseColors.primary,
   secondary: baseColors.secondary,
   success: baseColors.success,
@@ -73,6 +74,7 @@ export const lightTheme = {
 
 // Theme tối
 export const darkTheme = {
+  ...baseColors,
   primary: baseColors.primary,
   secondary: baseColors.secondary,
   success: baseColors.success,
