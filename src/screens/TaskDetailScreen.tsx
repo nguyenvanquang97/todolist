@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   Alert,
   StyleSheet,
+  ToastAndroid,
+  Platform,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
@@ -17,6 +19,7 @@ import { Task } from '../types/Task';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { globalStyles } from '../styles/globalStyles';
 import { colors, spacing, borderRadius, fonts } from '../styles/theme';
+import { testNotification } from '../utils/notificationHelper';
 
 type TaskDetailScreenNavigationProp = StackNavigationProp<RootStackParamList, 'TaskDetail'>;
 type TaskDetailScreenRouteProp = RouteProp<RootStackParamList, 'TaskDetail'>;
@@ -30,27 +33,6 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
   const { task: initialTask } = route.params;
   const { updateTask, deleteTask, loading } = useTaskContext();
   const [task, setTask] = useState<Task>(initialTask);
-
-  useEffect(() => {
-    navigation.setOptions({
-      headerRight: () => (
-        <View style={{ flexDirection: 'row' }}>
-          <TouchableOpacity
-            style={{ marginRight: 15 }}
-            onPress={handleEdit}
-          >
-            <Icon name="create-outline" size={24} color={colors.white} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={{ marginRight: 15 }}
-            onPress={handleDelete}
-          >
-            <Icon name="trash-outline" size={24} color={colors.white} />
-          </TouchableOpacity>
-        </View>
-      ),
-    });
-  }, [navigation]);
 
   const handleEdit = () => {
     navigation.navigate('AddEditTask', {
@@ -83,6 +65,27 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
       ]
     );
   };
+  
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <View style={{ flexDirection: 'row' }}>
+          <TouchableOpacity
+            style={{ marginRight: 15 }}
+            onPress={handleEdit}
+          >
+            <Icon name="create-outline" size={24} color={colors.white} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={{ marginRight: 15 }}
+            onPress={handleDelete}
+          >
+            <Icon name="trash-outline" size={24} color={colors.white} />
+          </TouchableOpacity>
+        </View>
+      ),
+    });
+  }, [navigation, handleEdit, handleDelete]);
 
   const handleToggleStatus = async () => {
     try {
@@ -91,6 +94,19 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
       setTask({ ...task, status: newStatus });
     } catch (error) {
       Alert.alert('Lỗi', 'Không thể cập nhật trạng thái công việc');
+    }
+  };
+  
+  const handleTestNotification = async () => {
+    try {
+      await testNotification();
+      if (Platform.OS === 'android') {
+        ToastAndroid.show('Đã gửi thông báo kiểm tra', ToastAndroid.SHORT);
+      } else {
+        Alert.alert('Thông báo', 'Đã gửi thông báo kiểm tra');
+      }
+    } catch (error) {
+      Alert.alert('Lỗi', 'Không thể gửi thông báo kiểm tra');
     }
   };
 
@@ -211,7 +227,7 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
           style={[
             globalStyles.button,
             task.status === 'completed' ? globalStyles.buttonSecondary : {},
-            { marginTop: spacing.xl },
+            { marginTop: spacing.xl ,flexDirection:"row", gap:8,alignItems:"center"},
           ]}
           onPress={handleToggleStatus}
         >
@@ -228,6 +244,31 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
             ]}
           >
             {task.status === 'completed' ? 'Đánh dấu chưa hoàn thành' : 'Đánh dấu hoàn thành'}
+          </Text>
+        </TouchableOpacity>
+        
+        {/* Test Notification Button */}
+        <TouchableOpacity
+          style={[
+            globalStyles.button,
+            globalStyles.buttonSecondary,
+            { marginTop: spacing.md, backgroundColor: colors.primary + '20',flexDirection:"row", gap:8,alignItems:"center"}
+          ]}
+          onPress={handleTestNotification}
+        >
+          <Icon
+            name="notifications-outline"
+            size={20}
+            color={colors.primary}
+            style={{ marginRight: spacing.xs }}
+          />
+          <Text
+            style={[
+              globalStyles.buttonText,
+              { color: colors.primary }
+            ]}
+          >
+            Kiểm tra thông báo
           </Text>
         </TouchableOpacity>
       </View>

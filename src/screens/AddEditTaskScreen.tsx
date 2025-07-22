@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import Icon from 'react-native-vector-icons/Ionicons';
 import moment from 'moment';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -42,24 +42,7 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const isEditMode = mode === 'edit';
 
-  useEffect(() => {
-    navigation.setOptions({
-      title: isEditMode ? 'Chỉnh sửa công việc' : 'Thêm công việc mới',
-      headerRight: () => (
-        <TouchableOpacity
-          style={{ marginRight: 15 }}
-          onPress={handleSave}
-          disabled={loading}
-        >
-          <Text style={{ color: colors.white, fontSize: 16, fontWeight: '600' }}>
-            {loading ? 'Đang lưu...' : 'Lưu'}
-          </Text>
-        </TouchableOpacity>
-      ),
-    });
-  }, [navigation, isEditMode, loading, title, description, priority, dueDate, handleSave]);
-
-  const validateForm = useCallback((): boolean => {
+    const validateForm = useCallback((): boolean => {
     const newErrors: { [key: string]: string } = {};
 
     if (!title.trim()) {
@@ -80,7 +63,8 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
     return Object.keys(newErrors).length === 0;
   }, [title, description, dueDate]);
 
-  const handleSave = useCallback(async () => {
+
+    const handleSave = useCallback(async () => {
     if (!validateForm()) {
       return;
     }
@@ -114,14 +98,34 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
     }
   }, [validateForm, title, description, priority, dueDate, isEditMode, task, updateTask, addTask, navigation]);
 
-  const handleDateChange = (event: any, selectedDate?: Date) => {
+
+  useEffect(() => {
+    navigation.setOptions({
+      title: isEditMode ? 'Chỉnh sửa công việc' : 'Thêm công việc mới',
+      headerRight: () => (
+        <TouchableOpacity
+          style={{ marginRight: 15 }}
+          onPress={handleSave}
+          disabled={loading}
+        >
+          <Text style={{ color: colors.white, fontSize: 16, fontWeight: '600' }}>
+            {loading ? 'Đang lưu...' : 'Lưu'}
+          </Text>
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation, isEditMode, loading, title, description, priority, dueDate, handleSave]);
+
+  const handleDateChange = (selectedDate: Date) => {
     setShowDatePicker(false);
-    if (selectedDate) {
-      setDueDate(selectedDate);
-      if (errors.dueDate) {
-        setErrors({ ...errors, dueDate: '' });
-      }
+    setDueDate(selectedDate);
+    if (errors.dueDate) {
+      setErrors({ ...errors, dueDate: '' });
     }
+  };
+  
+  const handleDateCancel = () => {
+    setShowDatePicker(false);
   };
 
   const clearDueDate = () => {
@@ -295,15 +299,16 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
       </View>
 
       {/* Date Picker Modal */}
-      {showDatePicker && (
-        <DateTimePicker
-          value={dueDate || new Date()}
-          mode="datetime"
-          display="default"
-          minimumDate={new Date()}
-          onChange={handleDateChange}
-        />
-      )}
+      <DateTimePickerModal
+        isVisible={showDatePicker}
+        mode="datetime"
+        date={dueDate || new Date()}
+        minimumDate={new Date()}
+        onConfirm={handleDateChange}
+        onCancel={handleDateCancel}
+        cancelTextIOS="Hủy"
+        confirmTextIOS="Xác nhận"
+      />
     </ScrollView>
   );
 };

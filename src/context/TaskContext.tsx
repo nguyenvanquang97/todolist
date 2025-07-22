@@ -1,6 +1,8 @@
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, ReactNode, useCallback } from 'react';
 import { Task, TaskFilter, TaskContextType } from '../types/Task';
 import DatabaseHelper from '../database/DatabaseHelper';
+import NotificationService from '../services/NotificationService';
+import { scheduleNotificationsForTasks } from '../utils/notificationHelper';
 
 interface TaskState {
   tasks: Task[];
@@ -63,27 +65,51 @@ interface TaskProviderProps {
 export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(taskReducer, initialState);
   const dbHelper = DatabaseHelper.getInstance();
+  const notificationService = NotificationService.getInstance();
 
   useEffect(() => {
     initializeDatabase();
-  }, []);
+    initializeNotifications();
+  }, [initializeDatabase, initializeNotifications]);
 
-  const initializeDatabase = async () => {
+  const initializeNotifications = useCallback(async () => {
+    try {
+      await notificationService.createNotificationChannel();
+    } catch (error) {
+      console.error('Notification initialization error:', error);
+    }
+  }, [notificationService]);
+
+  const initializeDatabase = useCallback(async () => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       await dbHelper.initDatabase();
-      await loadTasks();
+      try {
+        const tasks = await dbHelper.getAllTasks();
+        dispatch({ type: 'SET_TASKS', payload: tasks });
+        
+        // Lên lịch thông báo cho tất cả các task chưa hoàn thành có ngày đến hạn
+        await scheduleNotificationsForTasks(tasks);
+      } catch (error) {
+        dispatch({ type: 'SET_ERROR', payload: 'Failed to load tasks' });
+        console.error('Load tasks error:', error);
+      } finally {
+        dispatch({ type: 'SET_LOADING', payload: false });
+      }
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: 'Failed to initialize database' });
       console.error('Database initialization error:', error);
     }
-  };
+  }, [dbHelper, dispatch]);
 
   const loadTasks = async () => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       const tasks = await dbHelper.getAllTasks();
       dispatch({ type: 'SET_TASKS', payload: tasks });
+      
+      // Lên lịch thông báo cho tất cả các task chưa hoàn thành có ngày đến hạn
+      await scheduleNotificationsForTasks(tasks);
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: 'Failed to load tasks' });
       console.error('Load tasks error:', error);
@@ -102,6 +128,11 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
           created_at: new Date().toISOString(),
         };
         dispatch({ type: 'ADD_TASK', payload: newTask });
+        
+        // Lên lịch thông báo nếu có ngày đến hạn
+        if (task.due_date) {
+          await notificationService.scheduleNotification(newTask);
+        }
       }
       dispatch({ type: 'SET_LOADING', payload: false });
     } catch (error) {
@@ -115,6 +146,24 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
       dispatch({ type: 'SET_LOADING', payload: true });
       await dbHelper.updateTask(id, task);
       dispatch({ type: 'UPDATE_TASK', payload: { id, task } });
+      
+      // Cập nhật thông báo nếu có thay đổi về ngày đến hạn hoặc trạng thái
+      if (task.due_date || task.status) {
+        // Lấy task hiện tại sau khi cập nhật
+        const updatedTask = state.tasks.find(t => t.id === id);
+        if (updatedTask) {
+          const mergedTask = { ...updatedTask, ...task };
+          
+          // Nếu task đã hoàn thành, hủy thông báo
+          if (mergedTask.status === 'completed') {
+            await notificationService.cancelNotification(id);
+          } else if (mergedTask.due_date) {
+            // Nếu task chưa hoàn thành và có ngày đến hạn, lên lịch lại thông báo
+            await notificationService.scheduleNotification(mergedTask);
+          }
+        }
+      }
+      
       dispatch({ type: 'SET_LOADING', payload: false });
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: 'Failed to update task' });
@@ -126,6 +175,10 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       await dbHelper.deleteTask(id);
+      
+      // Hủy thông báo khi xóa task
+      await notificationService.cancelNotification(id);
+      
       dispatch({ type: 'DELETE_TASK', payload: id });
       dispatch({ type: 'SET_LOADING', payload: false });
     } catch (error) {

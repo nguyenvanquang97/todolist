@@ -6,6 +6,7 @@ export interface Task {
   priority: 'low' | 'medium' | 'high';
   status: 'pending' | 'completed';
   created_at?: string;
+  updated_at?: string;
 }
 
 export interface TaskFilter {
