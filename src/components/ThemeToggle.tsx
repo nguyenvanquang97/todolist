@@ -4,6 +4,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '@context/ThemeContext';
 import ThemeSelector from './ThemeSelector';
 import { spacing } from '@styles/theme';
+import { useTranslation } from '@i18n/i18n';
 
 interface ThemeToggleProps {
   style?: object;
@@ -11,6 +12,7 @@ interface ThemeToggleProps {
 
 const ThemeToggle: React.FC<ThemeToggleProps> = ({ style }) => {
   const { theme, actualTheme, colors } = useTheme();
+  const { t } = useTranslation();
   const [modalVisible, setModalVisible] = useState(false);
 
   const getThemeIcon = () => {
@@ -29,13 +31,13 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ style }) => {
   const getThemeText = () => {
     switch (theme) {
       case 'light':
-        return 'Chế độ sáng';
+        return t('settings.theme.light');
       case 'dark':
-        return 'Chế độ tối';
+        return t('settings.theme.dark');
       case 'system':
-        return 'Theo hệ thống';
+        return t('settings.theme.system');
       default:
-        return actualTheme === 'dark' ? 'Chế độ tối' : 'Chế độ sáng';
+        return actualTheme === 'dark' ? t('settings.theme.dark') : t('settings.theme.light');
     }
   };
 
@@ -91,7 +93,7 @@ const styles = StyleSheet.create({
   content: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap:spacing.xs
+    gap:spacing.xs,
   },
   icon: {
     marginRight: 8,

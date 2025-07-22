@@ -1,7 +1,12 @@
 import moment from 'moment';
 
-// Cấu hình moment để sử dụng tiếng Việt
+// Khởi tạo mặc định với tiếng Việt
 moment.locale('vi');
+
+// Cấu hình moment dựa trên ngôn ngữ hiện tại
+export const configureMomentLocale = (language: string = 'vi') => {
+  moment.locale(language);
+};
 
 export const formatDate = (date: string | Date, format: string = 'DD/MM/YYYY'): string => {
   return moment(date).format(format);
@@ -35,30 +40,30 @@ export const isThisWeek = (date: string | Date): boolean => {
   return moment(date).isSame(moment(), 'week');
 };
 
-export const getDateRangeText = (date: string | Date): string => {
+export const getDateRangeText = (date: string | Date, translations?: { today: string; tomorrow: string; yesterday: string }): string => {
   const momentDate = moment(date);
   const now = moment();
-  
+
   if (momentDate.isSame(now, 'day')) {
-    return 'Hôm nay';
+    return translations?.today || 'Hôm nay';
   }
-  
+
   if (momentDate.isSame(now.add(1, 'day'), 'day')) {
-    return 'Ngày mai';
+    return translations?.tomorrow || 'Ngày mai';
   }
-  
+
   if (momentDate.isSame(now.subtract(1, 'day'), 'day')) {
-    return 'Hôm qua';
+    return translations?.yesterday || 'Hôm qua';
   }
-  
+
   if (momentDate.isSame(now, 'week')) {
     return momentDate.format('dddd');
   }
-  
+
   if (momentDate.isSame(now, 'year')) {
     return momentDate.format('DD/MM');
   }
-  
+
   return momentDate.format('DD/MM/YYYY');
 };
 

@@ -6,7 +6,7 @@ import { Task } from '../types/Task';
  */
 export const scheduleNotificationsForTasks = async (tasks: Task[]) => {
   const notificationService = NotificationService.getInstance();
-  
+
   // Lọc các task chưa hoàn thành và có ngày đến hạn
   const pendingTasksWithDueDate = tasks.filter(
     (task) => task.status === 'pending' && task.due_date

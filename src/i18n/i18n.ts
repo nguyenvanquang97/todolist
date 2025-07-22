@@ -1,6 +1,7 @@
-import { useSettings } from '@context/SettingsContext';
+import { useContext } from 'react';
+import { SettingsContext } from '../context/SettingsContext';
 
-type TranslationKey = 
+type TranslationKey =
   | 'app.name'
   | 'task.title'
   | 'task.description'
@@ -22,6 +23,12 @@ type TranslationKey =
   | 'task.filter.all'
   | 'task.search'
   | 'task.empty'
+  | 'taskList.searchPlaceholder'
+  | 'taskList.title'
+  | 'taskDetail.title'
+  | 'date.today'
+  | 'date.tomorrow'
+  | 'date.yesterday'
   | 'settings.title'
   | 'settings.theme'
   | 'settings.theme.light'
@@ -43,6 +50,10 @@ type TranslationKey =
   | 'settings.loading'
   | 'settings.error'
   | 'settings.retry'
+  | 'settings.error.theme'
+  | 'settings.error.notifications'
+  | 'settings.error.language'
+  | 'settings.error.reset'
   | 'common.cancel'
   | 'common.save'
   | 'common.delete'
@@ -56,6 +67,14 @@ type TranslationKey =
   | 'common.updating'
   | 'common.saving'
   | 'common.notification'
+  | 'common.all'
+  | 'common.reset'
+  | 'common.apply'
+  | 'common.errors.network'
+  | 'common.errors.database'
+  | 'common.errors.validation'
+  | 'common.errors.unknown'
+  | 'common.errors.permission'
   | 'priority.high'
   | 'priority.medium'
   | 'priority.low'
@@ -75,6 +94,15 @@ type TranslationKey =
   | 'taskList.noFilterResults'
   | 'taskList.changeFilterPrompt'
   | 'taskList.addFirstTask'
+  | 'taskList.filter'
+  | 'taskList.filterStatus'
+  | 'taskList.filterPriority'
+  | 'taskList.errors.notFound'
+  | 'taskList.success.created'
+  | 'taskList.success.updated'
+  | 'taskList.success.deleted'
+  | 'taskList.success.completed'
+  | 'taskList.success.reopened'
   | 'taskDetail.deleteConfirmTitle'
   | 'taskDetail.deleteConfirmMessage'
   | 'taskDetail.deleteError'
@@ -140,6 +168,9 @@ const en: Translations = {
   'task.filter.all': 'All',
   'task.search': 'Search tasks...',
   'task.empty': 'No tasks found. Add a new task to get started!',
+  'date.today': 'Today',
+  'date.tomorrow': 'Tomorrow',
+  'date.yesterday': 'Yesterday',
   'settings.title': 'Settings',
   'settings.theme': 'Theme',
   'settings.theme.light': 'Light',
@@ -160,6 +191,10 @@ const en: Translations = {
   'settings.info.lastUpdated': 'Last Updated',
   'settings.loading': 'Loading settings...',
   'settings.error': 'Could not load settings',
+  'settings.error.theme': 'Could not update theme',
+  'settings.error.notifications': 'Could not update notifications',
+  'settings.error.language': 'Could not update language',
+  'settings.error.reset': 'Could not reset settings',
   'settings.retry': 'Retry',
   'common.cancel': 'Cancel',
   'common.save': 'Save',
@@ -174,6 +209,14 @@ const en: Translations = {
   'common.updating': 'Updating...',
   'common.saving': 'Saving...',
   'common.notification': 'Notification',
+  'common.all': 'All',
+  'common.reset': 'Reset',
+  'common.errors.network': 'Network error',
+  'common.errors.database': 'Database error',
+  'common.errors.validation': 'Invalid data',
+  'common.errors.unknown': 'An unknown error occurred',
+  'common.errors.permission': 'Permission denied',
+  'common.apply': 'Apply',
   'priority.high': 'High',
   'priority.medium': 'Medium',
   'priority.low': 'Low',
@@ -190,9 +233,21 @@ const en: Translations = {
   'taskList.addTaskPrompt': 'Tap + to add a new task',
   'taskList.noSearchResults': 'No results found',
   'taskList.noMatchingTasks': 'No tasks match "{query}"',
+  'taskList.title': 'Task List',
+  'taskDetail.title': 'Task Details',
   'taskList.noFilterResults': 'No matching tasks',
   'taskList.changeFilterPrompt': 'Try changing filters to see more tasks',
   'taskList.addFirstTask': 'Add your first task',
+  'taskList.filter': 'Filter Tasks',
+  'taskList.filterStatus': 'Status',
+  'taskList.filterPriority': 'Priority',
+  'taskList.searchPlaceholder': 'Search tasks...',
+  'taskList.errors.notFound': 'Task not found',
+  'taskList.success.created': 'Task created successfully',
+  'taskList.success.updated': 'Task updated successfully',
+  'taskList.success.deleted': 'Task deleted successfully',
+  'taskList.success.completed': 'Task marked as completed',
+  'taskList.success.reopened': 'Task reopened',
   'taskDetail.deleteConfirmTitle': 'Confirm Delete',
   'taskDetail.deleteConfirmMessage': 'Are you sure you want to delete this task?',
   'taskDetail.deleteError': 'Could not delete task',
@@ -255,6 +310,11 @@ const vi: Translations = {
   'task.filter.all': 'Tất cả',
   'task.search': 'Tìm kiếm công việc...',
   'task.empty': 'Không tìm thấy công việc nào. Thêm công việc mới để bắt đầu!',
+  'taskList.title': 'Danh sách công việc',
+  'taskDetail.title': 'Chi tiết công việc',
+  'date.today': 'Hôm nay',
+  'date.tomorrow': 'Ngày mai',
+  'date.yesterday': 'Hôm qua',
   'settings.title': 'Cài đặt',
   'settings.theme': 'Giao diện',
   'settings.theme.light': 'Sáng',
@@ -275,6 +335,10 @@ const vi: Translations = {
   'settings.info.lastUpdated': 'Cập nhật lần cuối',
   'settings.loading': 'Đang tải cài đặt...',
   'settings.error': 'Không thể tải cài đặt',
+  'settings.error.theme': 'Không thể cập nhật chủ đề',
+  'settings.error.notifications': 'Không thể cập nhật thông báo',
+  'settings.error.language': 'Không thể cập nhật ngôn ngữ',
+  'settings.error.reset': 'Không thể đặt lại cài đặt',
   'settings.retry': 'Thử lại',
   'common.cancel': 'Hủy',
   'common.save': 'Lưu',
@@ -289,6 +353,14 @@ const vi: Translations = {
   'common.updating': 'Đang cập nhật...',
   'common.saving': 'Đang lưu...',
   'common.notification': 'Thông báo',
+  'common.all': 'Tất cả',
+  'common.reset': 'Đặt lại',
+  'common.apply': 'Áp dụng',
+  'common.errors.network': 'Lỗi kết nối mạng',
+  'common.errors.database': 'Lỗi cơ sở dữ liệu',
+  'common.errors.validation': 'Dữ liệu không hợp lệ',
+  'common.errors.unknown': 'Đã xảy ra lỗi không xác định',
+  'common.errors.permission': 'Không có quyền truy cập',
   'priority.high': 'Cao',
   'priority.medium': 'Trung bình',
   'priority.low': 'Thấp',
@@ -308,6 +380,16 @@ const vi: Translations = {
   'taskList.noFilterResults': 'Không có công việc nào phù hợp',
   'taskList.changeFilterPrompt': 'Thử thay đổi bộ lọc để xem nhiều công việc hơn',
   'taskList.addFirstTask': 'Thêm công việc đầu tiên',
+  'taskList.filter': 'Lọc công việc',
+  'taskList.filterStatus': 'Trạng thái',
+  'taskList.filterPriority': 'Mức độ ưu tiên',
+  'taskList.searchPlaceholder': 'Tìm kiếm công việc...',
+  'taskList.errors.notFound': 'Không tìm thấy công việc',
+  'taskList.success.created': 'Công việc đã được tạo thành công',
+  'taskList.success.updated': 'Công việc đã được cập nhật thành công',
+  'taskList.success.deleted': 'Công việc đã được xóa thành công',
+  'taskList.success.completed': 'Công việc đã được đánh dấu hoàn thành',
+  'taskList.success.reopened': 'Công việc đã được mở lại',
   'taskDetail.deleteConfirmTitle': 'Xác nhận xóa',
   'taskDetail.deleteConfirmMessage': 'Bạn có chắc chắn muốn xóa công việc này?',
   'taskDetail.deleteError': 'Không thể xóa công việc',
@@ -349,10 +431,11 @@ const vi: Translations = {
 };
 
 export const useTranslation = () => {
-  const { settings } = useSettings();
-  
+  const context = useContext(SettingsContext);
+
   const t = (key: TranslationKey): string => {
-    const language = settings.language || 'vi';
+    // Nếu context không tồn tại, sử dụng ngôn ngữ mặc định là tiếng Việt
+    const language = context?.settings?.language || 'vi';
     return language === 'en' ? en[key] : vi[key];
   };
 

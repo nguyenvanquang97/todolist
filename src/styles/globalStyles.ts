@@ -157,8 +157,8 @@ export const createGlobalStyles = (colors: any) => ({
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     margin: spacing.md,
-    maxHeight: DEVICE_HEIGHT*0.8,
-    width: DEVICE_WIDTH*0.9,
+    maxHeight: DEVICE_HEIGHT * 0.8,
+    width: DEVICE_WIDTH * 0.9,
   },
   modalHeader: {
     flexDirection: 'row' as const,
@@ -326,7 +326,7 @@ import { useMemo } from 'react';
 
 export const useGlobalStyles = () => {
   const { colors } = useTheme();
-  
+
   // Sử dụng useMemo để tránh tạo lại styles mỗi khi component render
   return useMemo(() => StyleSheet.create(createGlobalStyles(colors)), [colors]);
 };

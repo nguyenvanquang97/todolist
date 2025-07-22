@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '@context/ThemeContext';
 import { spacing, borderRadius, fonts } from '@styles/theme';
+import { useTranslation } from '@i18n/i18n';
 
 type ThemeType = 'light' | 'dark' | 'system';
 
@@ -12,11 +13,12 @@ interface ThemeSelectorProps {
 
 const ThemeSelector: React.FC<ThemeSelectorProps> = ({ onClose }) => {
   const { theme, setTheme, colors } = useTheme();
+  const { t } = useTranslation();
 
   const themeOptions: { value: ThemeType; label: string; icon: string }[] = [
-    { value: 'light', label: 'Sáng', icon: 'sunny-outline' },
-    { value: 'dark', label: 'Tối', icon: 'moon-outline' },
-    { value: 'system', label: 'Hệ thống', icon: 'phone-portrait-outline' },
+    { value: 'light', label: t('settings.theme.light'), icon: 'sunny-outline' },
+    { value: 'dark', label: t('settings.theme.dark'), icon: 'moon-outline' },
+    { value: 'system', label: t('settings.theme.system'), icon: 'phone-portrait-outline' },
   ];
 
   const handleSelectTheme = (selectedTheme: ThemeType) => {
@@ -29,7 +31,7 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({ onClose }) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Chọn chủ đề</Text>
+        <Text style={styles.title}>{t('settings.theme')}</Text>
         <TouchableOpacity onPress={onClose} style={styles.closeButton}>
           <Icon name="close-outline" size={24} color={colors.text} />
         </TouchableOpacity>

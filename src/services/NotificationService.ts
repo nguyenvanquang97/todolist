@@ -54,7 +54,7 @@ class NotificationService {
    */
   public async scheduleNotification(task: Task) {
     // Nếu không có ngày đến hạn, không lên lịch thông báo
-    if (!task.due_date) return;
+    if (!task.due_date) {return;}
 
     // Xóa thông báo cũ nếu có (dựa trên ID task)
     if (task.id) {
@@ -62,15 +62,15 @@ class NotificationService {
     }
 
     const dueDate = new Date(task.due_date);
-    
+
     // Nếu ngày đến hạn đã qua, không lên lịch thông báo
-    if (dueDate.getTime() <= Date.now()) return;
+    if (dueDate.getTime() <= Date.now()) {return;}
 
     // Lên lịch thông báo trước 1 giờ
     const triggerDate = new Date(dueDate.getTime() - 60 * 60 * 1000);
-    
+
     // Nếu thời gian thông báo đã qua, không lên lịch
-    if (triggerDate.getTime() <= Date.now()) return;
+    if (triggerDate.getTime() <= Date.now()) {return;}
 
     // Tạo trigger dựa trên thời gian
     const trigger: TimestampTrigger = {

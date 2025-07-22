@@ -25,7 +25,7 @@ import { useTranslation } from '@/i18n';
 
 // Define base colors for use in the component
 const baseColors = {
-  white: '#FFFFFF'
+  white: '#FFFFFF',
 };
 
 type AddEditTaskScreenNavigationProp = StackNavigationProp<TaskStackParamList, 'AddEditTask'>;
@@ -134,7 +134,7 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
       setErrors({ ...errors, dueDate: '' });
     }
   };
-  
+
   const handleDateCancel = () => {
     setShowDatePicker(false);
   };
@@ -183,7 +183,7 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
               {errors.title}
             </Text>
           )}
-  
+
 
         {/* Description Input */}
         <View style={globalStyles.inputGroup}>
@@ -262,8 +262,8 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
                 paddingHorizontal: spacing.md,
                 borderWidth: 1,
                 borderColor: colors.border,
-                flexDirection:"row",
-                alignItems:"center"
+                flexDirection:'row',
+                alignItems:'center',
               },
               errors.dueDate && globalStyles.inputError,
             ]}

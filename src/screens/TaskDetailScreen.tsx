@@ -33,8 +33,8 @@ const baseColors = {
     400: '#9CA3AF',
     500: '#6B7280',
     600: '#4B5563',
-    700: '#374151'
-  }
+    700: '#374151',
+  },
 };
 
 type TaskDetailScreenNavigationProp = StackNavigationProp<TaskStackParamList, 'TaskDetail'>;
@@ -60,7 +60,7 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
   }, [navigation, task]);
 
   const { t } = useTranslation();
-  
+
   const handleDelete = useCallback(async () => {
     Alert.alert(
       t('taskDetail.deleteConfirmTitle'),
@@ -85,7 +85,7 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
       ]
     );
   }, [deleteTask, navigation, task, t]);
-  
+
   useEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -120,7 +120,7 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
       Alert.alert(t('common.error'), t('taskDetail.updateStatusError'));
     }
   };
-  
+
   const handleTestNotification = async () => {
     try {
       await testNotification();
@@ -254,7 +254,7 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
           icon={task.status === 'completed' ? 'refresh' : 'checkmark'}
           style={{ marginTop: spacing.xl }}
         />
-        
+
         {/* Test Notification Button */}
         <Button
           title={t('taskDetail.testNotification')}

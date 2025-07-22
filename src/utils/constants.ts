@@ -1,4 +1,4 @@
-import { Dimensions } from "react-native";
+import { Dimensions } from 'react-native';
 
 // Database constants
 export const DATABASE_NAME = 'TodoApp.db';
@@ -18,11 +18,8 @@ export const TASK_PRIORITIES = {
   HIGH: 'high',
 } as const;
 
-export const PRIORITY_LABELS = {
-  [TASK_PRIORITIES.LOW]: 'Thấp',
-  [TASK_PRIORITIES.MEDIUM]: 'Trung bình',
-  [TASK_PRIORITIES.HIGH]: 'Cao',
-} as const;
+// Priority labels are now handled by i18n
+// Use t('priority.low'), t('priority.medium'), t('priority.high') instead
 
 // Task statuses
 export const TASK_STATUSES = {
@@ -30,10 +27,8 @@ export const TASK_STATUSES = {
   COMPLETED: 'completed',
 } as const;
 
-export const STATUS_LABELS = {
-  [TASK_STATUSES.PENDING]: 'Chưa hoàn thành',
-  [TASK_STATUSES.COMPLETED]: 'Đã hoàn thành',
-} as const;
+// Status labels are now handled by i18n
+// Use t('status.pending'), t('status.completed') instead
 
 // Filter options
 export const FILTER_OPTIONS = {
@@ -69,23 +64,23 @@ export const UI_CONSTANTS = {
   MAX_VISIBLE_TASKS: 100,
 } as const;
 
-// Error messages
+// Error messages - now handled by i18n
 export const ERROR_MESSAGES = {
-  NETWORK_ERROR: 'Lỗi kết nối mạng',
-  DATABASE_ERROR: 'Lỗi cơ sở dữ liệu',
-  VALIDATION_ERROR: 'Dữ liệu không hợp lệ',
-  UNKNOWN_ERROR: 'Đã xảy ra lỗi không xác định',
-  TASK_NOT_FOUND: 'Không tìm thấy công việc',
-  PERMISSION_DENIED: 'Không có quyền truy cập',
+  NETWORK_ERROR: 'common.errors.network',
+  DATABASE_ERROR: 'common.errors.database',
+  VALIDATION_ERROR: 'common.errors.validation',
+  UNKNOWN_ERROR: 'common.errors.unknown',
+  TASK_NOT_FOUND: 'taskList.errors.notFound',
+  PERMISSION_DENIED: 'common.errors.permission',
 } as const;
 
-// Success messages
+// Success messages - now handled by i18n
 export const SUCCESS_MESSAGES = {
-  TASK_CREATED: 'Công việc đã được tạo thành công',
-  TASK_UPDATED: 'Công việc đã được cập nhật thành công',
-  TASK_DELETED: 'Công việc đã được xóa thành công',
-  TASK_COMPLETED: 'Công việc đã được đánh dấu hoàn thành',
-  TASK_REOPENED: 'Công việc đã được mở lại',
+  TASK_CREATED: 'taskList.success.created',
+  TASK_UPDATED: 'taskList.success.updated',
+  TASK_DELETED: 'taskList.success.deleted',
+  TASK_COMPLETED: 'taskList.success.completed',
+  TASK_REOPENED: 'taskList.success.reopened',
 } as const;
 
 // Storage keys

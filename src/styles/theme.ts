@@ -44,28 +44,28 @@ export const lightTheme = {
   error: baseColors.error,
   info: baseColors.info,
   bg_primary: baseColors.primary,
-  
+
   // Màu nền
   background: baseColors.white,
   card: baseColors.white,
   surface: baseColors.gray[50],
-  
+
   // Màu văn bản
   text: baseColors.dark,
   textSecondary: baseColors.gray[600],
   textDisabled: baseColors.gray[400],
-  
+
   // Màu viền
   border: baseColors.gray[200],
   divider: baseColors.gray[200],
-  
+
   // Màu trạng thái
   statusBar: baseColors.primary,
-  
+
   // Màu ưu tiên và trạng thái
   priority: baseColors.priority,
   status: baseColors.status,
-  
+
   // Các màu khác
   shadow: 'rgba(0, 0, 0, 0.1)',
   overlay: 'rgba(0, 0, 0, 0.5)',
@@ -81,28 +81,28 @@ export const darkTheme = {
   error: baseColors.error,
   info: baseColors.info,
   bg_primary: baseColors.dark,
-  
+
   // Màu nền
   background: baseColors.dark,
   card: '#2C2C2E',
   surface: '#3A3A3C',
-  
+
   // Màu văn bản
   text: baseColors.white,
   textSecondary: baseColors.gray[300],
   textDisabled: baseColors.gray[500],
-  
+
   // Màu viền
   border: baseColors.gray[700],
   divider: baseColors.gray[700],
-  
+
   // Màu trạng thái
   statusBar: baseColors.dark,
-  
+
   // Màu ưu tiên và trạng thái
   priority: baseColors.priority,
   status: baseColors.status,
-  
+
   // Các màu khác
   shadow: 'rgba(0, 0, 0, 0.3)',
   overlay: 'rgba(0, 0, 0, 0.7)',
@@ -113,7 +113,7 @@ export const colors = {
   ...lightTheme,
   black: baseColors.black,
   white: baseColors.white,
-  gray: baseColors.gray
+  gray: baseColors.gray,
 };
 
 export const fonts = {

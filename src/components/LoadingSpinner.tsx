@@ -2,6 +2,7 @@ import React from 'react';
 import { View, ActivityIndicator, Text } from 'react-native';
 import { globalStyles } from '@styles/globalStyles';
 import { useTheme } from '@context/ThemeContext';
+import { useTranslation } from '@i18n/i18n';
 
 interface LoadingSpinnerProps {
   text?: string;
@@ -10,16 +11,18 @@ interface LoadingSpinnerProps {
 }
 
 const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
-  text = 'Đang tải...',
+  text,
   size = 'large',
   color,
 }) => {
   const { colors } = useTheme();
+  const { t } = useTranslation();
+  const loadingText = text || t('settings.loading');
   const spinnerColor = color || colors.primary;
   return (
     <View style={globalStyles.loadingContainer}>
       <ActivityIndicator size={size} color={spinnerColor} />
-      {text && <Text style={globalStyles.loadingText}>{text}</Text>}
+      {loadingText && <Text style={globalStyles.loadingText}>{loadingText}</Text>}
     </View>
   );
 };

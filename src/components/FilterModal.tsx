@@ -6,6 +6,7 @@ import {spacing, borderRadius, fonts} from '@styles/theme';
 import {globalStyles} from '@styles/globalStyles';
 import {useTheme} from '@context/ThemeContext';
 import Button from '@components/Button';
+import {useTranslation} from '@i18n/i18n';
 
 interface FilterModalProps {
   visible: boolean;
@@ -86,20 +87,21 @@ const FilterModal: React.FC<FilterModalProps> = ({
   onApplyFilter,
 }) => {
   const {colors} = useTheme();
+  const {t} = useTranslation();
   const [tempFilter, setTempFilter] = useState<TaskFilter>(currentFilter);
   const styles = createStyles(colors);
 
   const statusOptions = [
-    {value: 'all', label: 'Tất cả'},
-    {value: 'pending', label: 'Chưa hoàn thành'},
-    {value: 'completed', label: 'Đã hoàn thành'},
+    {value: 'all', label: t('common.all')},
+    {value: 'pending', label: t('status.pending')},
+    {value: 'completed', label: t('status.completed')},
   ];
 
   const priorityOptions = [
-    {value: 'all', label: 'Tất cả'},
-    {value: 'high', label: 'Cao'},
-    {value: 'medium', label: 'Trung bình'},
-    {value: 'low', label: 'Thấp'},
+    {value: 'all', label: t('common.all')},
+    {value: 'high', label: t('priority.high')},
+    {value: 'medium', label: t('priority.medium')},
+    {value: 'low', label: t('priority.low')},
   ];
 
   const handleApply = () => {
@@ -160,7 +162,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
           <View
             style={[globalStyles.modalContent, {backgroundColor: colors.card}]}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Lọc công việc</Text>
+              <Text style={styles.modalTitle}>{t('taskList.filter')}</Text>
               <TouchableOpacity
                 onPress={onClose}
                 activeOpacity={0.7}
@@ -171,7 +173,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
 
             <View style={styles.content}>
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Trạng thái</Text>
+                <Text style={styles.sectionTitle}>{t('taskList.filterStatus')}</Text>
                 <View style={styles.optionsContainer}>
                   {renderOption(statusOptions, tempFilter.status, value =>
                     setTempFilter({
@@ -183,7 +185,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
               </View>
 
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Mức độ ưu tiên</Text>
+                <Text style={styles.sectionTitle}>{t('taskList.filterPriority')}</Text>
                 <View style={styles.optionsContainer}>
                   {renderOption(priorityOptions, tempFilter.priority, value =>
                     setTempFilter({
@@ -197,14 +199,14 @@ const FilterModal: React.FC<FilterModalProps> = ({
 
             <View style={styles.buttonContainer}>
               <Button
-                title="Đặt lại"
+                title={t('common.reset')}
                 variant="secondary"
                 style={styles.button}
                 onPress={handleReset}
               />
 
               <Button
-                title="Áp dụng"
+                title={t('common.apply')}
                 style={styles.button}
                 onPress={handleApply}
               />

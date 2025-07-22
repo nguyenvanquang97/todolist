@@ -44,7 +44,7 @@ const SettingsScreen: React.FC = () => {
       ]
     );
   };
-  
+
   const handleToggleNotifications = (value: boolean) => {
     updateNotifications(value);
   };
@@ -181,13 +181,13 @@ const SettingsScreen: React.FC = () => {
           activeOpacity={1}
           onPress={() => setLanguageModalVisible(false)}
         >
-          <View 
+          <View
             style={[styles.modalContent, { backgroundColor: colors.card }]}
             onStartShouldSetResponder={() => true}
             onTouchEnd={(e) => e.stopPropagation()}
           >
             <Text style={[styles.modalTitle, { color: colors.text }]}>{t('settings.language')}</Text>
-            
+
             <TouchableOpacity
               style={[styles.languageOption, settings.language === 'en' && styles.selectedOption]}
               onPress={() => handleLanguageChange('en')}
@@ -197,7 +197,7 @@ const SettingsScreen: React.FC = () => {
                 <Icon name="checkmark" size={20} color={colors.primary} />
               )}
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={[styles.languageOption, settings.language === 'vi' && styles.selectedOption]}
               onPress={() => handleLanguageChange('vi')}

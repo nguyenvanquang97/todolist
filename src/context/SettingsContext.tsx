@@ -1,5 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
-import { useColorScheme } from 'react-native';
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import DatabaseHelper from '@database/DatabaseHelper';
 import { AppSettings } from '../types/Task';
 
@@ -22,17 +21,16 @@ const defaultSettings: AppSettings = {
   language: 'vi',
 };
 
-const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
+export const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const deviceTheme = useColorScheme();
-  
+
   const dbHelper = DatabaseHelper.getInstance();
 
-  const loadSettings = async () => {
+  const loadSettings = useCallback(async () => {
     try {
       setLoading(true);
       await dbHelper.initDatabase();
@@ -41,15 +39,15 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setError(null);
     } catch (error: any) {
       console.error('Error loading settings:', error);
-      setError('Không thể tải cài đặt: ' + error.message);
+      setError('Error loading settings: ' + error.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [dbHelper]);
 
   useEffect(() => {
     loadSettings();
-  }, []);
+  }, [loadSettings]);
 
   const updateTheme = async (theme: ThemeType) => {
     try {
@@ -59,7 +57,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setError(null);
     } catch (error: any) {
       console.error('Error updating theme:', error);
-      setError('Không thể cập nhật chủ đề: ' + error.message);
+      setError('Error updating theme: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -73,7 +71,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setError(null);
     } catch (error: any) {
       console.error('Error updating notifications:', error);
-      setError('Không thể cập nhật thông báo: ' + error.message);
+      setError('Error updating notifications: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -87,7 +85,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setError(null);
     } catch (error: any) {
       console.error('Error updating language:', error);
-      setError('Không thể cập nhật ngôn ngữ: ' + error.message);
+      setError('Error updating language: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -101,7 +99,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       setError(null);
     } catch (error: any) {
       console.error('Error resetting settings:', error);
-      setError('Không thể đặt lại cài đặt: ' + error.message);
+      setError('Error resetting settings: ' + error.message);
     } finally {
       setLoading(false);
     }

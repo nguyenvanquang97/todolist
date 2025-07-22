@@ -1,7 +1,7 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Task } from '../types/Task';
+
 import TaskListScreen from '@screens/TaskListScreen';
 import AddEditTaskScreen from '@screens/AddEditTaskScreen';
 import TaskDetailScreen from '@screens/TaskDetailScreen';
@@ -9,6 +9,9 @@ import SettingsScreen from '@screens/SettingsScreen';
 import { useTheme } from '@context/ThemeContext';
 import { baseColors } from '@styles/theme';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { useTranslation } from '@i18n/i18n';
+import { Task } from '@/types/Task';
+
 
 // Import screens
 
@@ -33,7 +36,8 @@ const Tab = createBottomTabNavigator<RootTabParamList>();
 
 const TaskStackNavigator: React.FC = () => {
   const { colors } = useTheme();
-  
+  const { t } = useTranslation();
+
   return (
     <TaskStack.Navigator
       initialRouteName="TaskList"
@@ -51,44 +55,50 @@ const TaskStackNavigator: React.FC = () => {
         name="TaskList"
         component={TaskListScreen}
         options={{
-          title: 'Danh sách công việc',
+          title: t('taskList.title'),
         }}
       />
       <TaskStack.Screen
         name="AddEditTask"
         component={AddEditTaskScreen}
         options={({ route }) => ({
-          title: route.params.mode === 'add' ? 'Thêm công việc' : 'Sửa công việc',
+          title: route.params.mode === 'add' ? t('task.add') : t('task.edit'),
         })}
       />
       <TaskStack.Screen
         name="TaskDetail"
         component={TaskDetailScreen}
         options={{
-          title: 'Chi tiết công việc',
+          title: t('taskDetail.title'),
         }}
       />
     </TaskStack.Navigator>
   );
 };
 
+// Tạo hàm tabBarIcon riêng biệt để tránh định nghĩa component trong quá trình render
+const getTabBarIcon = (route: string) => {
+  return ({ focused, color, size }: { focused: boolean; color: string; size: number }) => {
+    let iconName = '';
+
+    if (route === 'TaskStack') {
+      iconName = focused ? 'list' : 'list-outline';
+    } else if (route === 'Settings') {
+      iconName = focused ? 'settings' : 'settings-outline';
+    }
+
+    return <Icon name={iconName} size={size} color={color} />;
+  };
+};
+
 const AppNavigator: React.FC = () => {
   const { colors } = useTheme();
-  
+  const { t } = useTranslation();
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName = '';
-
-          if (route.name === 'TaskStack') {
-            iconName = focused ? 'list' : 'list-outline';
-          } else if (route.name === 'Settings') {
-            iconName = focused ? 'settings' : 'settings-outline';
-          }
-
-          return <Icon name={iconName} size={size} color={color} />;
-        },
+        tabBarIcon: getTabBarIcon(route.name),
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textSecondary,
         tabBarStyle: {
@@ -98,18 +108,18 @@ const AppNavigator: React.FC = () => {
         headerShown: false,
       })}
     >
-      <Tab.Screen 
-        name="TaskStack" 
-        component={TaskStackNavigator} 
+      <Tab.Screen
+        name="TaskStack"
+        component={TaskStackNavigator}
         options={{
-          title: 'Công việc',
+          title: t('taskList.title'),
         }}
       />
-      <Tab.Screen 
-        name="Settings" 
-        component={SettingsScreen} 
+      <Tab.Screen
+        name="Settings"
+        component={SettingsScreen}
         options={{
-          title: 'Cài đặt',
+          title: t('settings.title'),
           headerShown: true,
           headerStyle: {
             backgroundColor: colors.bg_primary,

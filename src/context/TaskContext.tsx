@@ -82,7 +82,7 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
       try {
         const tasks = await dbHelper.getAllTasks();
         dispatch({ type: 'SET_TASKS', payload: tasks });
-        
+
         // Lên lịch thông báo cho tất cả các task chưa hoàn thành có ngày đến hạn
         await scheduleNotificationsForTasks(tasks);
       } catch (error) {
@@ -107,7 +107,7 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
       dispatch({ type: 'SET_LOADING', payload: true });
       const tasks = await dbHelper.getAllTasks();
       dispatch({ type: 'SET_TASKS', payload: tasks });
-      
+
       // Lên lịch thông báo cho tất cả các task chưa hoàn thành có ngày đến hạn
       await scheduleNotificationsForTasks(tasks);
     } catch (error) {
@@ -120,7 +120,7 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       const result = await dbHelper.insertTask(task);
-      
+
       if (result.insertId) {
         const newTask: Task = {
           ...task,
@@ -128,7 +128,7 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
           created_at: new Date().toISOString(),
         };
         dispatch({ type: 'ADD_TASK', payload: newTask });
-        
+
         // Lên lịch thông báo nếu có ngày đến hạn
         if (task.due_date) {
           await notificationService.scheduleNotification(newTask);
@@ -146,14 +146,14 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
       dispatch({ type: 'SET_LOADING', payload: true });
       await dbHelper.updateTask(id, task);
       dispatch({ type: 'UPDATE_TASK', payload: { id, task } });
-      
+
       // Cập nhật thông báo nếu có thay đổi về ngày đến hạn hoặc trạng thái
       if (task.due_date || task.status) {
         // Lấy task hiện tại sau khi cập nhật
         const updatedTask = state.tasks.find(t => t.id === id);
         if (updatedTask) {
           const mergedTask = { ...updatedTask, ...task };
-          
+
           // Nếu task đã hoàn thành, hủy thông báo
           if (mergedTask.status === 'completed') {
             await notificationService.cancelNotification(id);
@@ -163,7 +163,7 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
           }
         }
       }
-      
+
       dispatch({ type: 'SET_LOADING', payload: false });
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: 'Failed to update task' });
@@ -175,10 +175,10 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       await dbHelper.deleteTask(id);
-      
+
       // Hủy thông báo khi xóa task
       await notificationService.cancelNotification(id);
-      
+
       dispatch({ type: 'DELETE_TASK', payload: id });
       dispatch({ type: 'SET_LOADING', payload: false });
     } catch (error) {

@@ -8,6 +8,7 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons';
 import { spacing, borderRadius, baseColors } from '@styles/theme';
 import { useTheme } from '@context/ThemeContext';
+import { useTranslation } from '@i18n/i18n';
 
 interface SearchBarProps {
   placeholder?: string;
@@ -16,12 +17,16 @@ interface SearchBarProps {
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({
-  placeholder = 'Tìm kiếm công việc...',
+  placeholder,
   onSearch,
   onClear,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const { colors, isDarkMode } = useTheme();
+  const { t } = useTranslation();
+
+  // Use the provided placeholder or default to translated value
+  const searchPlaceholder = placeholder || t('taskList.searchPlaceholder');
 
   const handleSearch = (text: string) => {
     setSearchQuery(text);
@@ -40,7 +45,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
         <Icon name="search" size={20} color={colors.textSecondary} style={styles.searchIcon} />
         <TextInput
           style={[styles.input, { color: colors.text }]}
-          placeholder={placeholder}
+          placeholder={searchPlaceholder}
           placeholderTextColor={colors.textDisabled}
           value={searchQuery}
           onChangeText={handleSearch}

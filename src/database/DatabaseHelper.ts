@@ -62,7 +62,7 @@ class DatabaseHelper {
       await this.database?.executeSql(createTasksTableQuery);
       await this.database?.executeSql(createSettingsTableQuery);
       console.log('Database tables created successfully');
-      
+
       // Initialize settings if not exists
       await this.initializeSettings();
     } catch (error) {
@@ -272,7 +272,7 @@ class DatabaseHelper {
           theme: settings.theme,
           notifications_enabled: Boolean(settings.notifications_enabled),
           language: settings.language || 'vi',
-          last_updated: settings.last_updated
+          last_updated: settings.last_updated,
         };
       }
       throw new Error('No settings found');

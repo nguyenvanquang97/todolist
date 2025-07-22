@@ -63,8 +63,8 @@ const Button: React.FC<ButtonProps> = ({
 
   // Xác định màu icon nếu không được cung cấp
   const getIconColor = () => {
-    if (iconColor) return iconColor;
-    
+    if (iconColor) {return iconColor;}
+
     switch (variant) {
       case 'secondary':
         return colors.text;
@@ -87,9 +87,9 @@ const Button: React.FC<ButtonProps> = ({
         activeOpacity={0.7}
       >
         {loading ? (
-          <ActivityIndicator 
-            size="small" 
-            color={iconColor || colors.primary} 
+          <ActivityIndicator
+            size="small"
+            color={iconColor || colors.primary}
           />
         ) : (
           icon && (
@@ -119,9 +119,9 @@ const Button: React.FC<ButtonProps> = ({
       activeOpacity={0.7}
     >
       {loading ? (
-        <ActivityIndicator 
-          size="small" 
-          color={variant === 'secondary' ? colors.primary : baseColors.white} 
+        <ActivityIndicator
+          size="small"
+          color={variant === 'secondary' ? colors.primary : baseColors.white}
         />
       ) : (
         <>

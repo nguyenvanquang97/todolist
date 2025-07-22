@@ -6,42 +6,58 @@ export interface ValidationResult {
   errors: { [key: string]: string };
 }
 
-export const validateTask = (task: Partial<Task>): ValidationResult => {
+export const validateTask = (task: Partial<Task>, translations?: {
+  emptyTitle: string;
+  titleTooShort: string;
+  titleTooLong: string;
+  descriptionTooLong: string;
+  pastDueDate: string;
+  commonError: string;
+}): ValidationResult => {
   const errors: { [key: string]: string } = {};
+  const defaultTranslations = {
+    emptyTitle: 'Tiêu đề không được để trống',
+    titleTooShort: 'Tiêu đề quá ngắn (tối thiểu 3 ký tự)',
+    titleTooLong: 'Tiêu đề quá dài (tối đa 100 ký tự)',
+    descriptionTooLong: 'Mô tả quá dài (tối đa 500 ký tự)',
+    pastDueDate: 'Ngày đến hạn không thể trong quá khứ',
+    commonError: 'Lỗi',
+  };
+  const t = translations || defaultTranslations;
 
   // Validate title
   if (!task.title || !task.title.trim()) {
-    errors.title = 'Tiêu đề không được để trống';
+    errors.title = t.emptyTitle;
   } else if (task.title.trim().length < 3) {
-    errors.title = 'Tiêu đề phải có ít nhất 3 ký tự';
+    errors.title = t.titleTooShort;
   } else if (task.title.trim().length > 100) {
-    errors.title = 'Tiêu đề không được vượt quá 100 ký tự';
+    errors.title = t.titleTooLong;
   }
 
   // Validate description
   if (task.description && task.description.length > 500) {
-    errors.description = 'Mô tả không được vượt quá 500 ký tự';
+    errors.description = t.descriptionTooLong;
   }
 
   // Validate priority
   if (task.priority && !['low', 'medium', 'high'].includes(task.priority)) {
-    errors.priority = 'Mức độ ưu tiên không hợp lệ';
+    errors.priority = t.commonError;
   }
 
   // Validate status
   if (task.status && !['pending', 'completed'].includes(task.status)) {
-    errors.status = 'Trạng thái không hợp lệ';
+    errors.status = t.commonError;
   }
 
   // Validate due date
   if (task.due_date) {
     if (!validateDate(task.due_date)) {
-      errors.due_date = 'Ngày đến hạn không hợp lệ';
+      errors.due_date = t.commonError;
     } else {
       const dueDate = new Date(task.due_date);
       const now = new Date();
       if (dueDate < now) {
-        errors.due_date = 'Ngày đến hạn không thể là ngày trong quá khứ';
+        errors.due_date = t.pastDueDate;
       }
     }
   }
@@ -52,17 +68,17 @@ export const validateTask = (task: Partial<Task>): ValidationResult => {
   };
 };
 
-export const validateSearchQuery = (query: string): ValidationResult => {
+export const validateSearchQuery = (query: string, errorMessage: string = 'Lỗi'): ValidationResult => {
   const errors: { [key: string]: string } = {};
 
   if (query.length > 100) {
-    errors.query = 'Từ khóa tìm kiếm không được vượt quá 100 ký tự';
+    errors.query = errorMessage;
   }
 
   // Check for potentially harmful characters
   const harmfulChars = /[<>"'&]/;
   if (harmfulChars.test(query)) {
-    errors.query = 'Từ khóa tìm kiếm chứa ký tự không hợp lệ';
+    errors.query = errorMessage;
   }
 
   return {
@@ -90,37 +106,37 @@ export const validatePhoneNumber = (phone: string): boolean => {
 
 export const validateUrl = (url: string): boolean => {
   try {
-    new URL(url);
-    return true;
+    const parsedUrl = new URL(url);
+    return !!parsedUrl;
   } catch {
     return false;
   }
 };
 
-export const validateRequired = (value: any, fieldName: string): string | null => {
+export const validateRequired = (value: any, fieldName: string, errorMessage: string = 'Trường này là bắt buộc'): string | null => {
   if (value === null || value === undefined || value === '') {
-    return `${fieldName} là bắt buộc`;
+    return errorMessage;
   }
   return null;
 };
 
-export const validateMinLength = (value: string, minLength: number, fieldName: string): string | null => {
+export const validateMinLength = (value: string, minLength: number, fieldName: string, errorMessage: string = `Độ dài tối thiểu là ${minLength} ký tự`): string | null => {
   if (value && value.length < minLength) {
-    return `${fieldName} phải có ít nhất ${minLength} ký tự`;
+    return errorMessage;
   }
   return null;
 };
 
-export const validateMaxLength = (value: string, maxLength: number, fieldName: string): string | null => {
+export const validateMaxLength = (value: string, maxLength: number, fieldName: string, errorMessage: string = `Độ dài tối đa là ${maxLength} ký tự`): string | null => {
   if (value && value.length > maxLength) {
-    return `${fieldName} không được vượt quá ${maxLength} ký tự`;
+    return errorMessage;
   }
   return null;
 };
 
-export const validateRange = (value: number, min: number, max: number, fieldName: string): string | null => {
+export const validateRange = (value: number, min: number, max: number, fieldName: string, errorMessage: string = `Giá trị phải nằm trong khoảng từ ${min} đến ${max}`): string | null => {
   if (value < min || value > max) {
-    return `${fieldName} phải nằm trong khoảng ${min} - ${max}`;
+    return errorMessage;
   }
   return null;
 };

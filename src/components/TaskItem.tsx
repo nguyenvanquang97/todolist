@@ -11,6 +11,7 @@ import moment from 'moment';
 import { Task } from '../types/Task';
 import { spacing, borderRadius, fonts, baseColors } from '@styles/theme';
 import { useTheme } from '@context/ThemeContext';
+import { useTranslation } from '@i18n/i18n';
 
 export interface TaskItemProps {
   task: Task;
@@ -26,6 +27,7 @@ const TaskItem: React.FC<TaskItemProps> = ({
   onDelete,
 }) => {
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
@@ -42,13 +44,13 @@ const TaskItem: React.FC<TaskItemProps> = ({
   const getPriorityText = (priority: string) => {
     switch (priority) {
       case 'high':
-        return 'Cao';
+        return t('priority.high');
       case 'medium':
-        return 'Trung bình';
+        return t('priority.medium');
       case 'low':
-        return 'Thấp';
+        return t('priority.low');
       default:
-        return priority;
+        return t('priority.undefined');
     }
   };
 
@@ -67,15 +69,15 @@ const TaskItem: React.FC<TaskItemProps> = ({
 
   const handleDelete = () => {
     Alert.alert(
-      'Xác nhận xóa',
-      'Bạn có chắc chắn muốn xóa công việc này?',
+      t('taskList.deleteConfirmTitle'),
+      t('taskList.deleteConfirmMessage'),
       [
         {
-          text: 'Hủy',
+          text: t('common.cancel'),
           style: 'cancel',
         },
         {
-          text: 'Xóa',
+          text: t('common.delete'),
           style: 'destructive',
           onPress: () => onDelete(task.id!),
         },
@@ -105,30 +107,30 @@ const TaskItem: React.FC<TaskItemProps> = ({
               color={getStatusColor(task.status)}
             />
           </TouchableOpacity>
-          
+
           <View style={styles.taskInfo}>
             <Text
               style={[
                 styles.title,
                 { color: colors.text },
-                task.status === 'completed' && { 
+                task.status === 'completed' && {
                   textDecorationLine: 'line-through',
-                  color: colors.textDisabled 
+                  color: colors.textDisabled,
                 },
               ]}
               numberOfLines={2}
             >
               {task.title}
             </Text>
-            
+
             {task.description && (
               <Text
                 style={[
                   styles.description,
                   { color: colors.textSecondary },
-                  task.status === 'completed' && { 
+                  task.status === 'completed' && {
                     textDecorationLine: 'line-through',
-                    color: colors.textDisabled 
+                    color: colors.textDisabled,
                   },
                 ]}
                 numberOfLines={2}
@@ -183,7 +185,7 @@ const TaskItem: React.FC<TaskItemProps> = ({
                   },
                 ]}
               >
-                {task.status === 'completed' ? 'Hoàn thành' : 'Chưa hoàn thành'}
+                {task.status === 'completed' ? t('status.completed') : t('status.pending')}
               </Text>
             </View>
           </View>

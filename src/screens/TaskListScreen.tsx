@@ -17,7 +17,7 @@ import SearchBar from '@components/SearchBar';
 import FilterModal from '@components/FilterModal';
 import LoadingSpinner from '@components/LoadingSpinner';
 import { globalStyles } from '@styles/globalStyles';
-import { spacing, borderRadius, fonts, baseColors } from '@styles/theme';
+import { spacing, baseColors } from '@styles/theme';
 import { useTheme } from '@context/ThemeContext';
 import Button from '@/components/Button';
 import { useTranslation } from '@/i18n';
@@ -40,7 +40,7 @@ const TaskListScreen: React.FC<Props> = ({ navigation }) => {
     filterTasks,
     clearError,
   } = useTaskContext();
-  
+
   const { colors } = useTheme();
   const { t } = useTranslation();
 
@@ -75,14 +75,14 @@ const TaskListScreen: React.FC<Props> = ({ navigation }) => {
 
   useEffect(() => {
     if (error) {
-      Alert.alert('Lỗi', error, [
+      Alert.alert(t('common.error'), error, [
         {
-          text: 'OK',
+          text: t('common.ok'),
           onPress: clearError,
         },
       ]);
     }
-  }, [error, clearError]);
+  }, [error, clearError, t]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -105,7 +105,7 @@ const TaskListScreen: React.FC<Props> = ({ navigation }) => {
   const handleSearch = useCallback(async (query: string) => {
     const newFilter = { ...currentFilter, searchQuery: query };
     setCurrentFilter(newFilter);
-    
+
     if (query.trim()) {
       await searchTasks(query);
     } else {
@@ -117,9 +117,9 @@ const TaskListScreen: React.FC<Props> = ({ navigation }) => {
     try {
       await updateTask(id, { status });
     } catch (error) {
-      Alert.alert('Lỗi', 'Không thể cập nhật trạng thái công việc');
+      Alert.alert(t('common.error'), t('taskDetail.updateStatusError'));
     }
-  }, [updateTask]);
+  }, [updateTask, t]);
 
   const handleDeleteTask = useCallback(async (id: number) => {
     try {
@@ -168,19 +168,19 @@ const TaskListScreen: React.FC<Props> = ({ navigation }) => {
           />
         )}
     </View>
-  ), [colors, currentFilter, navigation, globalStyles, t]);
+  ), [colors, currentFilter, navigation, t]);
 
   // Memo hóa danh sách tasks để tránh render lại không cần thiết
   const memoizedTasks = useMemo(() => tasks, [tasks]);
-  
+
   // Memo hóa keyExtractor để tránh tạo lại hàm mới mỗi khi render
   const keyExtractor = useCallback((item: Task) => item.id?.toString() || '', []);
-  
+
   // Tính toán chiều cao của mỗi item dựa trên nội dung
   const calculateItemHeight = useCallback((item: Task): number => {
     // Chiều cao cơ bản cho mỗi item
     let height = 120;
-    
+
     // Thêm chiều cao nếu có description
     if (item.description && item.description.length > 0) {
       // Ước tính số dòng của description (giả sử mỗi 30 ký tự là một dòng)
@@ -188,24 +188,24 @@ const TaskListScreen: React.FC<Props> = ({ navigation }) => {
       // Mỗi dòng thêm khoảng 20px
       height += Math.min(descriptionLines, 2) * 20; // Giới hạn ở 2 dòng vì có numberOfLines={2}
     }
-    
+
     return height;
   }, []);
-  
+
   // Tính toán chiều cao tích lũy cho mỗi item
   const itemHeights = useMemo(() => {
     const heights: number[] = [];
     let accumHeight = 0;
-    
+
     memoizedTasks.forEach((task) => {
       const height = calculateItemHeight(task);
       heights.push(accumHeight);
       accumHeight += height;
     });
-    
+
     return heights;
   }, [memoizedTasks, calculateItemHeight]);
-  
+
   // Memo hóa getItemLayout để tránh tính toán lại mỗi khi render
   const getItemLayout = useCallback((data: any, index: number) => {
     // Nếu không có dữ liệu hoặc index nằm ngoài phạm vi, sử dụng giá trị mặc định
@@ -216,10 +216,10 @@ const TaskListScreen: React.FC<Props> = ({ navigation }) => {
         index,
       };
     }
-    
+
     const length = calculateItemHeight(data[index]);
     const offset = itemHeights[index];
-    
+
     return { length, offset, index };
   }, [calculateItemHeight, itemHeights]);
 
@@ -233,7 +233,7 @@ const TaskListScreen: React.FC<Props> = ({ navigation }) => {
         onSearch={handleSearch}
         onClear={() => handleSearch('')}
       />
-      
+
       <FlatList
         data={memoizedTasks}
         renderItem={renderTaskItem}
@@ -252,7 +252,7 @@ const TaskListScreen: React.FC<Props> = ({ navigation }) => {
           />
         }
         showsVerticalScrollIndicator={false}
-        
+
         // Tối ưu hiệu suất cho danh sách lớn
         windowSize={5} // Giảm số lượng items được render cùng lúc (mặc định là 21)
         maxToRenderPerBatch={5} // Giảm số lượng items được render trong một lần (mặc định là 10)
@@ -264,7 +264,7 @@ const TaskListScreen: React.FC<Props> = ({ navigation }) => {
           minIndexForVisible: 0,
           autoscrollToTopThreshold: 10,
         }}
-        
+
         // Tối ưu thêm
         disableVirtualization={false} // Đảm bảo virtualization được bật
         legacyImplementation={false} // Sử dụng implementation mới
@@ -273,7 +273,7 @@ const TaskListScreen: React.FC<Props> = ({ navigation }) => {
         directionalLockEnabled={true} // Chỉ cho phép cuộn theo một hướng tại một thời điểm
         showsHorizontalScrollIndicator={false}
         automaticallyAdjustContentInsets={false} // Tránh điều chỉnh content insets tự động
-        
+
         // Tối ưu bộ nhớ
         extraData={refreshing} // Chỉ render lại khi refreshing thay đổi
         progressViewOffset={0}
