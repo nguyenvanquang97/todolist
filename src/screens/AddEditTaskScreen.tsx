@@ -20,6 +20,8 @@ import Button from '@components/Button';
 import { globalStyles } from '@styles/globalStyles';
 import { spacing, borderRadius, fonts } from '@styles/theme';
 import { useTheme } from '@context/ThemeContext';
+import { useTranslation } from '@/i18n';
+
 
 // Define base colors for use in the component
 const baseColors = {
@@ -38,6 +40,7 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
   const { mode, task } = route.params;
   const { addTask, updateTask, loading } = useTaskContext();
   const { colors } = useTheme();
+  const { t } = useTranslation();
 
   const [title, setTitle] = useState(task?.title || '');
   const [description, setDescription] = useState(task?.description || '');
@@ -54,22 +57,22 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
     const newErrors: { [key: string]: string } = {};
 
     if (!title.trim()) {
-      newErrors.title = 'Tiêu đề không được để trống';
+      newErrors.title = t('addEditTask.errors.emptyTitle');
     } else if (title.trim().length < 3) {
-      newErrors.title = 'Tiêu đề phải có ít nhất 3 ký tự';
+      newErrors.title = t('addEditTask.errors.titleTooShort');
     }
 
     if (description.trim().length > 500) {
-      newErrors.description = 'Mô tả không được vượt quá 500 ký tự';
+      newErrors.description = t('addEditTask.errors.descriptionTooLong');
     }
 
     if (dueDate && dueDate < new Date()) {
-      newErrors.dueDate = 'Ngày đến hạn không thể là ngày trong quá khứ';
+      newErrors.dueDate = t('addEditTask.errors.pastDueDate');
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [title, description, dueDate]);
+  }, [title, description, dueDate, t]);
 
 
     const handleSave = useCallback(async () => {
@@ -87,8 +90,8 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
 
       if (isEditMode && task) {
         await updateTask(task.id!, taskData);
-        Alert.alert('Thành công', 'Công việc đã được cập nhật', [
-          { text: 'OK', onPress: () => navigation.goBack() },
+        Alert.alert(t('common.success'), t('addEditTask.updateSuccess'), [
+          { text: t('common.ok'), onPress: () => navigation.goBack() },
         ]);
       } else {
         await addTask({
@@ -97,19 +100,19 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
           createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
           updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
         } as Task);
-        Alert.alert('Thành công', 'Công việc đã được thêm', [
-          { text: 'OK', onPress: () => navigation.goBack() },
+        Alert.alert(t('common.success'), t('addEditTask.addSuccess'), [
+          { text: t('common.ok'), onPress: () => navigation.goBack() },
         ]);
       }
     } catch (error) {
-      Alert.alert('Lỗi', 'Không thể lưu công việc. Vui lòng thử lại.');
+      Alert.alert(t('common.error'), t('addEditTask.saveError'));
     }
-  }, [validateForm, title, description, priority, dueDate, isEditMode, task, updateTask, addTask, navigation]);
+  }, [validateForm, title, description, priority, dueDate, isEditMode, task, updateTask, addTask, navigation, t]);
 
 
   useEffect(() => {
     navigation.setOptions({
-      title: isEditMode ? 'Chỉnh sửa công việc' : 'Thêm công việc mới',
+      title: isEditMode ? t('addEditTask.editTitle') : t('addEditTask.addTitle'),
       headerRight: () => (
         <TouchableOpacity
           style={{ marginRight: 15 }}
@@ -117,12 +120,12 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
           disabled={loading}
         >
           <Text style={{ color: baseColors.white, fontSize: 16, fontWeight: '600' }}>
-            {loading ? 'Đang lưu...' : 'Lưu'}
+            {loading ? t('common.saving') : t('common.save')}
           </Text>
         </TouchableOpacity>
       ),
     });
-  }, [navigation, isEditMode, loading, title, description, priority, dueDate, handleSave]);
+  }, [navigation, isEditMode, loading, title, description, priority, dueDate, handleSave, t]);
 
   const handleDateChange = (selectedDate: Date) => {
     setShowDatePicker(false);
@@ -144,13 +147,13 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
   };
 
   const priorityOptions = [
-    { value: 'low', label: 'Thấp', color: colors.success, icon: 'arrow-down' },
-    { value: 'medium', label: 'Trung bình', color: colors.warning, icon: 'remove' },
-    { value: 'high', label: 'Cao', color: colors.error, icon: 'arrow-up' },
+    { value: 'low', label: t('priority.low'), color: colors.success, icon: 'arrow-down' },
+    { value: 'medium', label: t('priority.medium'), color: colors.warning, icon: 'remove' },
+    { value: 'high', label: t('priority.high'), color: colors.error, icon: 'arrow-up' },
   ];
 
   if (loading) {
-    return <LoadingSpinner text={isEditMode ? 'Đang cập nhật...' : 'Đang thêm công việc...'} />;
+    return <LoadingSpinner text={isEditMode ? t('common.updating') : t('addEditTask.adding')} />;
   }
 
   return (
@@ -158,7 +161,7 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
     style={[globalStyles.container, { paddingHorizontal: spacing.md, backgroundColor: colors.background }]} showsVerticalScrollIndicator={false}>
         {/* Title Input */}
         <View style={{ marginBottom: spacing.lg }}>
-          <Text style={globalStyles.label}>Tiêu đề *</Text>
+          <Text style={globalStyles.label}>{t('addEditTask.titleLabel')} *</Text>
           <TextInput
             style={[
               globalStyles.input,
@@ -171,7 +174,7 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
                 setErrors({ ...errors, title: '' });
               }
             }}
-            placeholder="Nhập tiêu đề công việc"
+            placeholder={t('addEditTask.titlePlaceholder')}
             placeholderTextColor={colors.textDisabled}
             maxLength={100}
           />
@@ -184,7 +187,7 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
 
         {/* Description Input */}
         <View style={globalStyles.inputGroup}>
-          <Text style={globalStyles.label}>Mô tả</Text>
+          <Text style={globalStyles.label}>{t('addEditTask.descriptionLabel')}</Text>
           <TextInput
             style={[
               globalStyles.input,
@@ -198,7 +201,7 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
                 setErrors({ ...errors, description: '' });
               }
             }}
-            placeholder="Nhập mô tả chi tiết (tùy chọn)"
+            placeholder={t('addEditTask.descriptionPlaceholder')}
             placeholderTextColor={colors.textDisabled}
             multiline
             numberOfLines={4}
@@ -215,7 +218,7 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
 
         {/* Priority Selection */}
         <View style={globalStyles.inputGroup}>
-          <Text style={globalStyles.label}>Mức độ ưu tiên</Text>
+          <Text style={globalStyles.label}>{t('addEditTask.priorityLabel')}</Text>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing.sm }}>
             {priorityOptions.map((option) => (
               <TouchableOpacity
@@ -249,7 +252,7 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
 
         {/* Due Date Selection */}
         <View style={globalStyles.inputGroup}>
-          <Text style={globalStyles.label}>Ngày đến hạn</Text>
+          <Text style={globalStyles.label}>{t('addEditTask.dueDateLabel')}</Text>
           <TouchableOpacity
             style={[
               {
@@ -276,7 +279,7 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
               >
                 {dueDate
                   ? moment(dueDate).format('DD/MM/YYYY HH:mm')
-                  : 'Chọn ngày đến hạn'}
+                  : t('addEditTask.selectDueDate')}
               </Text>
             </View>
             {dueDate && (
@@ -292,7 +295,7 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
 
         {/* Save Button */}
         <Button
-          title={isEditMode ? 'Cập nhật công việc' : 'Thêm công việc'}
+          title={isEditMode ? t('addEditTask.updateButton') : t('addEditTask.addButton')}
           style={{ marginTop: spacing.xl }}
           onPress={handleSave}
           disabled={!title.trim() || loading}
@@ -308,8 +311,8 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
         minimumDate={new Date()}
         onConfirm={handleDateChange}
         onCancel={handleDateCancel}
-        cancelTextIOS="Hủy"
-        confirmTextIOS="Xác nhận"
+        cancelTextIOS={t('common.cancel')}
+        confirmTextIOS={t('common.confirm')}
       />
     </ScrollView>
   );

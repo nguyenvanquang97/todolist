@@ -21,6 +21,7 @@ import { globalStyles } from '@styles/globalStyles';
 import { spacing, borderRadius, fonts } from '@styles/theme';
 import { useTheme } from '@context/ThemeContext';
 import { testNotification } from '@utils/notificationHelper';
+import { useTranslation } from '@/i18n';
 
 // Define base colors for use in the component
 const baseColors = {
@@ -58,30 +59,32 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
     });
   }, [navigation, task]);
 
+  const { t } = useTranslation();
+  
   const handleDelete = useCallback(async () => {
     Alert.alert(
-      'Xác nhận xóa',
-      'Bạn có chắc chắn muốn xóa công việc này?',
+      t('taskDetail.deleteConfirmTitle'),
+      t('taskDetail.deleteConfirmMessage'),
       [
         {
-          text: 'Hủy',
+          text: t('common.cancel'),
           style: 'cancel',
         },
         {
-          text: 'Xóa',
+          text: t('common.delete'),
           style: 'destructive',
           onPress: async () => {
             try {
               await deleteTask(task.id!);
               navigation.goBack();
             } catch (error) {
-              Alert.alert('Lỗi', 'Không thể xóa công việc');
+              Alert.alert(t('common.error'), t('taskDetail.deleteError'));
             }
           },
         },
       ]
     );
-  }, [deleteTask, navigation, task]);
+  }, [deleteTask, navigation, task, t]);
   
   useEffect(() => {
     navigation.setOptions({
@@ -114,7 +117,7 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
       await updateTask(task.id!, { status: newStatus });
       setTask({ ...task, status: newStatus });
     } catch (error) {
-      Alert.alert('Lỗi', 'Không thể cập nhật trạng thái công việc');
+      Alert.alert(t('common.error'), t('taskDetail.updateStatusError'));
     }
   };
   
@@ -122,36 +125,36 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
     try {
       await testNotification();
       if (Platform.OS === 'android') {
-        ToastAndroid.show('Đã gửi thông báo kiểm tra', ToastAndroid.SHORT);
+        ToastAndroid.show(t('taskDetail.notificationSent'), ToastAndroid.SHORT);
       } else {
-        Alert.alert('Thông báo', 'Đã gửi thông báo kiểm tra');
+        Alert.alert(t('common.notification'), t('taskDetail.notificationSent'));
       }
     } catch (error) {
-      Alert.alert('Lỗi', 'Không thể gửi thông báo kiểm tra');
+      Alert.alert(t('common.error'), t('taskDetail.notificationError'));
     }
   };
 
   const getPriorityInfo = (priority: string) => {
     switch (priority) {
       case 'high':
-        return { label: 'Cao', color: colors.error, icon: 'arrow-up' };
+        return { label: t('priority.high'), color: colors.error, icon: 'arrow-up' };
       case 'medium':
-        return { label: 'Trung bình', color: colors.warning, icon: 'remove' };
+        return { label: t('priority.medium'), color: colors.warning, icon: 'remove' };
       case 'low':
-        return { label: 'Thấp', color: colors.success, icon: 'arrow-down' };
+        return { label: t('priority.low'), color: colors.success, icon: 'arrow-down' };
       default:
-        return { label: 'Không xác định', color: colors.textSecondary, icon: 'help' };
+        return { label: t('priority.undefined'), color: colors.textSecondary, icon: 'help' };
     }
   };
 
   const getStatusInfo = (status: string) => {
     switch (status) {
       case 'completed':
-        return { label: 'Đã hoàn thành', color: colors.success, icon: 'checkmark-circle' };
+        return { label: t('status.completed'), color: colors.success, icon: 'checkmark-circle' };
       case 'pending':
-        return { label: 'Chưa hoàn thành', color: colors.warning, icon: 'time' };
+        return { label: t('status.pending'), color: colors.warning, icon: 'time' };
       default:
-        return { label: 'Không xác định', color: colors.textSecondary, icon: 'help' };
+        return { label: t('status.undefined'), color: colors.textSecondary, icon: 'help' };
     }
   };
 
@@ -160,7 +163,7 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
   const statusInfo = getStatusInfo(task.status);
 
   if (loading) {
-    return <LoadingSpinner text="Đang cập nhật..." />;
+    return <LoadingSpinner text={t('common.updating')} />;
   }
 
   return (
@@ -177,7 +180,7 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
           {isOverdue && (
             <View style={[styles.statusBadge, { backgroundColor: colors.error + '20' }]}>
               <Icon name="warning" size={16} color={colors.error} />
-              <Text style={[styles.statusText, { color: colors.error }]}>Quá hạn</Text>
+              <Text style={[styles.statusText, { color: colors.error }]}>{t('taskDetail.overdue')}</Text>
             </View>
           )}
         </View>
@@ -188,14 +191,14 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
         {/* Description */}
         {task.description && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Mô tả</Text>
+            <Text style={styles.sectionTitle}>{t('taskDetail.description')}</Text>
             <Text style={styles.description}>{task.description}</Text>
           </View>
         )}
 
         {/* Priority */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Mức độ ưu tiên</Text>
+          <Text style={styles.sectionTitle}>{t('taskDetail.priority')}</Text>
           <View style={[styles.priorityBadge, { backgroundColor: priorityInfo.color + '20' }]}>
             <Icon name={priorityInfo.icon} size={20} color={priorityInfo.color} />
             <Text style={[styles.priorityText, { color: priorityInfo.color }]}>
@@ -207,7 +210,7 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
         {/* Due Date */}
         {task.due_date && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Ngày đến hạn</Text>
+            <Text style={styles.sectionTitle}>{t('taskDetail.dueDate')}</Text>
             <View style={styles.dateContainer}>
               <Icon name="calendar-outline" size={20} color={colors.textSecondary} />
               <Text style={[styles.dateText, isOverdue && { color: colors.error }]}>
@@ -222,11 +225,11 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
 
         {/* Timestamps */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Thông tin thời gian</Text>
+          <Text style={styles.sectionTitle}>{t('taskDetail.timeInfo')}</Text>
           <View style={styles.timestampContainer}>
             <View style={styles.timestampRow}>
               <Icon name="add-circle-outline" size={16} color={colors.textDisabled} />
-              <Text style={styles.timestampLabel}>Tạo lúc:</Text>
+              <Text style={styles.timestampLabel}>{t('taskDetail.createdAt')}:</Text>
               <Text style={styles.timestampValue}>
                 {moment(task.created_at).format('DD/MM/YYYY HH:mm')}
               </Text>
@@ -234,7 +237,7 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
             {task.updated_at && task.updated_at !== task.created_at && (
               <View style={styles.timestampRow}>
                 <Icon name="create-outline" size={16} color={colors.textDisabled} />
-                <Text style={styles.timestampLabel}>Cập nhật:</Text>
+                <Text style={styles.timestampLabel}>{t('taskDetail.updatedAt')}:</Text>
                 <Text style={styles.timestampValue}>
                   {moment(task.updated_at).format('DD/MM/YYYY HH:mm')}
                 </Text>
@@ -245,7 +248,7 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
 
         {/* Action Button */}
         <Button
-          title={task.status === 'completed' ? 'Đánh dấu chưa hoàn thành' : 'Đánh dấu hoàn thành'}
+          title={task.status === 'completed' ? t('taskDetail.markIncomplete') : t('taskDetail.markComplete')}
           onPress={handleToggleStatus}
           variant={task.status === 'completed' ? 'secondary' : 'primary'}
           icon={task.status === 'completed' ? 'refresh' : 'checkmark'}
@@ -254,7 +257,7 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
         
         {/* Test Notification Button */}
         <Button
-          title="Kiểm tra thông báo"
+          title={t('taskDetail.testNotification')}
           onPress={handleTestNotification}
           variant="secondary"
           icon="notifications-outline"

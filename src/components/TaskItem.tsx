@@ -12,7 +12,7 @@ import { Task } from '../types/Task';
 import { spacing, borderRadius, fonts, baseColors } from '@styles/theme';
 import { useTheme } from '@context/ThemeContext';
 
-interface TaskItemProps {
+export interface TaskItemProps {
   task: Task;
   onPress: () => void;
   onToggleStatus: (id: number, status: 'pending' | 'completed') => void;

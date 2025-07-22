@@ -11,6 +11,7 @@ interface SettingsContextType {
   error: string | null;
   updateTheme: (theme: ThemeType) => Promise<void>;
   updateNotifications: (enabled: boolean) => Promise<void>;
+  updateLanguage: (language: 'en' | 'vi') => Promise<void>;
   resetSettings: () => Promise<void>;
   clearError: () => void;
 }
@@ -18,6 +19,7 @@ interface SettingsContextType {
 const defaultSettings: AppSettings = {
   theme: 'system',
   notifications_enabled: true,
+  language: 'vi',
 };
 
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
@@ -77,6 +79,20 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
+  const updateLanguage = async (language: 'en' | 'vi') => {
+    try {
+      setLoading(true);
+      await dbHelper.updateSettings({ language });
+      setSettings(prev => ({ ...prev, language }));
+      setError(null);
+    } catch (error: any) {
+      console.error('Error updating language:', error);
+      setError('Không thể cập nhật ngôn ngữ: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const resetSettings = async () => {
     try {
       setLoading(true);
@@ -103,6 +119,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         error,
         updateTheme,
         updateNotifications,
+        updateLanguage,
         resetSettings,
         clearError,
       }}

@@ -53,6 +53,7 @@ class DatabaseHelper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         theme TEXT NOT NULL,
         notifications_enabled INTEGER NOT NULL,
+        language TEXT NOT NULL,
         last_updated TEXT
       );
     `;
@@ -80,12 +81,23 @@ class DatabaseHelper {
       if (count === 0) {
         // Insert default settings
         const insertQuery = `
-          INSERT INTO settings (theme, notifications_enabled, last_updated)
-          VALUES (?, ?, ?);
+          INSERT INTO settings (theme, notifications_enabled, language, last_updated)
+          VALUES (?, ?, ?, ?);
         `;
         const now = new Date().toISOString();
-        await this.database?.executeSql(insertQuery, ['system', 1, now]);
+        await this.database?.executeSql(insertQuery, ['system', 1, 'vi', now]);
         console.log('Default settings initialized');
+      } else {
+        // Check if language column exists
+        try {
+          const checkLanguageQuery = 'SELECT language FROM settings LIMIT 1;';
+          await this.database?.executeSql(checkLanguageQuery);
+        } catch (e) {
+          // Language column doesn't exist, add it
+          const alterTableQuery = 'ALTER TABLE settings ADD COLUMN language TEXT NOT NULL DEFAULT "vi";';
+          await this.database?.executeSql(alterTableQuery);
+          console.log('Added language column to settings table');
+        }
       }
     } catch (error) {
       console.error('Error initializing settings:', error);
@@ -259,6 +271,7 @@ class DatabaseHelper {
           id: settings.id,
           theme: settings.theme,
           notifications_enabled: Boolean(settings.notifications_enabled),
+          language: settings.language || 'vi',
           last_updated: settings.last_updated
         };
       }

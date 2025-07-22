@@ -13,6 +13,7 @@
       "@navigation/*": ["src/navigation/*"],
       "@services/*": ["src/services/*"],
       "@types/*": ["src/types/*"],
+      "@i18n/*": ["src/i18n/*"],
       "Task": ["src/types/Task"]
     }
   }

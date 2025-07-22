@@ -37,5 +37,6 @@ export interface AppSettings {
   id?: number;
   theme: 'light' | 'dark' | 'system';
   notifications_enabled: boolean;
+  language: 'en' | 'vi';
   last_updated?: string;
 }
