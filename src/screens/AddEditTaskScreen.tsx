@@ -251,12 +251,14 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
                 paddingHorizontal: spacing.md,
                 borderWidth: 1,
                 borderColor: colors.gray[300],
+                flexDirection:"row",
+                alignItems:"center"
               },
               errors.dueDate && globalStyles.inputError,
             ]}
             onPress={() => setShowDatePicker(true)}
           >
-            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1,gap:spacing.sm }}>
               <Icon name="calendar-outline" size={20} color={colors.gray[600]} />
               <Text
                 style={[
