@@ -12,15 +12,22 @@ import { RouteProp } from '@react-navigation/native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import Icon from 'react-native-vector-icons/Ionicons';
 import moment from 'moment';
-import { RootStackParamList } from '../navigation/AppNavigator';
-import { useTaskContext } from '../context/TaskContext';
+import { TaskStackParamList } from '@navigation/AppNavigator';
+import { useTaskContext } from '@context/TaskContext';
 import { Task } from '../types/Task';
-import LoadingSpinner from '../components/LoadingSpinner';
-import { globalStyles } from '../styles/globalStyles';
-import { colors, spacing, borderRadius, fonts } from '../styles/theme';
+import LoadingSpinner from '@components/LoadingSpinner';
+import Button from '@components/Button';
+import { globalStyles } from '@styles/globalStyles';
+import { spacing, borderRadius, fonts } from '@styles/theme';
+import { useTheme } from '@context/ThemeContext';
 
-type AddEditTaskScreenNavigationProp = StackNavigationProp<RootStackParamList, 'AddEditTask'>;
-type AddEditTaskScreenRouteProp = RouteProp<RootStackParamList, 'AddEditTask'>;
+// Define base colors for use in the component
+const baseColors = {
+  white: '#FFFFFF'
+};
+
+type AddEditTaskScreenNavigationProp = StackNavigationProp<TaskStackParamList, 'AddEditTask'>;
+type AddEditTaskScreenRouteProp = RouteProp<TaskStackParamList, 'AddEditTask'>;
 
 interface Props {
   navigation: AddEditTaskScreenNavigationProp;
@@ -30,6 +37,7 @@ interface Props {
 const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
   const { mode, task } = route.params;
   const { addTask, updateTask, loading } = useTaskContext();
+  const { colors } = useTheme();
 
   const [title, setTitle] = useState(task?.title || '');
   const [description, setDescription] = useState(task?.description || '');
@@ -108,7 +116,7 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
           onPress={handleSave}
           disabled={loading}
         >
-          <Text style={{ color: colors.white, fontSize: 16, fontWeight: '600' }}>
+          <Text style={{ color: baseColors.white, fontSize: 16, fontWeight: '600' }}>
             {loading ? 'Đang lưu...' : 'Lưu'}
           </Text>
         </TouchableOpacity>
@@ -147,7 +155,7 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
 
   return (
     <ScrollView contentContainerStyle={{ paddingVertical: spacing.lg }}
-    style={[globalStyles.container, { paddingHorizontal: spacing.md }]} showsVerticalScrollIndicator={false}>
+    style={[globalStyles.container, { paddingHorizontal: spacing.md, backgroundColor: colors.background }]} showsVerticalScrollIndicator={false}>
         {/* Title Input */}
         <View style={{ marginBottom: spacing.lg }}>
           <Text style={globalStyles.label}>Tiêu đề *</Text>
@@ -164,7 +172,7 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
               }
             }}
             placeholder="Nhập tiêu đề công việc"
-            placeholderTextColor={colors.gray[400]}
+            placeholderTextColor={colors.textDisabled}
             maxLength={100}
           />
           {errors.title && (
@@ -191,13 +199,13 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
               }
             }}
             placeholder="Nhập mô tả chi tiết (tùy chọn)"
-            placeholderTextColor={colors.gray[400]}
+            placeholderTextColor={colors.textDisabled}
             multiline
             numberOfLines={4}
             textAlignVertical="top"
             maxLength={500}
           />
-          <Text style={{ fontSize: fonts.sizes?.sm || 12, color: colors.gray[500], textAlign: 'right', marginTop: spacing.xs }}>
+          <Text style={{ fontSize: fonts.sizes?.sm || 12, color: colors.textDisabled, textAlign: 'right', marginTop: spacing.xs }}>
             {description.length}/500
           </Text>
           {errors.description && (
@@ -213,7 +221,7 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
               <TouchableOpacity
                 key={option.value}
                 style={[
-                  { flex: 1, marginHorizontal: spacing.xs, padding: spacing.sm, borderWidth: 1, borderColor: colors.gray[300], borderRadius: borderRadius.md, alignItems: 'center', flexDirection: 'row', justifyContent: 'center' },
+                  { flex: 1, marginHorizontal: spacing.xs, padding: spacing.sm, borderWidth: 1, borderColor: colors.border, borderRadius: borderRadius.md, alignItems: 'center', flexDirection: 'row', justifyContent: 'center' },
                   priority === option.value && {
                     backgroundColor: option.color + '20',
                     borderColor: option.color,
@@ -224,7 +232,7 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
                 <Icon
                   name={option.icon}
                   size={20}
-                  color={priority === option.value ? option.color : colors.gray[500]}
+                  color={priority === option.value ? option.color : colors.textDisabled}
                 />
                 <Text
                   style={[
@@ -245,12 +253,12 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
           <TouchableOpacity
             style={[
               {
-                backgroundColor: colors.gray[100],
+                backgroundColor: colors.surface,
                 borderRadius: borderRadius.md,
                 paddingVertical: spacing.md,
                 paddingHorizontal: spacing.md,
                 borderWidth: 1,
-                borderColor: colors.gray[300],
+                borderColor: colors.border,
                 flexDirection:"row",
                 alignItems:"center"
               },
@@ -259,11 +267,11 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
             onPress={() => setShowDatePicker(true)}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1,gap:spacing.sm }}>
-              <Icon name="calendar-outline" size={20} color={colors.gray[600]} />
+              <Icon name="calendar-outline" size={20} color={colors.textSecondary} />
               <Text
                 style={[
-                  { fontSize: fonts.sizes?.md || 16, color: colors.dark },
-                  !dueDate && { color: colors.gray[400] },
+                  { fontSize: fonts.sizes?.md || 16, color: colors.text },
+                  !dueDate && { color: colors.textDisabled },
                 ]}
               >
                 {dueDate
@@ -273,7 +281,7 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
             </View>
             {dueDate && (
               <TouchableOpacity onPress={clearDueDate}>
-                <Icon name="close-circle" size={20} color={colors.gray[400]} />
+                <Icon name="close-circle" size={20} color={colors.textDisabled} />
               </TouchableOpacity>
             )}
           </TouchableOpacity>
@@ -283,21 +291,13 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
         </View>
 
         {/* Save Button */}
-        <TouchableOpacity
-          style={[
-            globalStyles.button,
-            { marginTop: spacing.xl },
-            (!title.trim() || loading) && { opacity: 0.6 },
-          ]}
+        <Button
+          title={isEditMode ? 'Cập nhật công việc' : 'Thêm công việc'}
+          style={{ marginTop: spacing.xl }}
           onPress={handleSave}
           disabled={!title.trim() || loading}
-        >
-          <Text style={globalStyles.buttonText}>
-            {loading
-              ? (isEditMode ? 'Đang cập nhật...' : 'Đang thêm...')
-              : (isEditMode ? 'Cập nhật công việc' : 'Thêm công việc')}
-          </Text>
-        </TouchableOpacity>
+          loading={loading}
+        />
       </View>
 
       {/* Date Picker Modal */}

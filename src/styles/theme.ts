@@ -1,4 +1,5 @@
-export const colors = {
+// Các màu cơ bản
+export const baseColors = {
   primary: '#007AFF',
   secondary: '#5856D6',
   success: '#34C759',
@@ -31,6 +32,88 @@ export const colors = {
     pending: '#FF9500',
     completed: '#34C759',
   },
+};
+
+// Theme sáng
+export const lightTheme = {
+  primary: baseColors.primary,
+  secondary: baseColors.secondary,
+  success: baseColors.success,
+  warning: baseColors.warning,
+  danger: baseColors.danger,
+  error: baseColors.error,
+  info: baseColors.info,
+  bg_primary: baseColors.primary,
+  
+  // Màu nền
+  background: baseColors.white,
+  card: baseColors.white,
+  surface: baseColors.gray[50],
+  
+  // Màu văn bản
+  text: baseColors.dark,
+  textSecondary: baseColors.gray[600],
+  textDisabled: baseColors.gray[400],
+  
+  // Màu viền
+  border: baseColors.gray[200],
+  divider: baseColors.gray[200],
+  
+  // Màu trạng thái
+  statusBar: baseColors.primary,
+  
+  // Màu ưu tiên và trạng thái
+  priority: baseColors.priority,
+  status: baseColors.status,
+  
+  // Các màu khác
+  shadow: 'rgba(0, 0, 0, 0.1)',
+  overlay: 'rgba(0, 0, 0, 0.5)',
+};
+
+// Theme tối
+export const darkTheme = {
+  primary: baseColors.primary,
+  secondary: baseColors.secondary,
+  success: baseColors.success,
+  warning: baseColors.warning,
+  danger: baseColors.danger,
+  error: baseColors.error,
+  info: baseColors.info,
+  bg_primary: baseColors.dark,
+  
+  // Màu nền
+  background: baseColors.dark,
+  card: '#2C2C2E',
+  surface: '#3A3A3C',
+  
+  // Màu văn bản
+  text: baseColors.white,
+  textSecondary: baseColors.gray[300],
+  textDisabled: baseColors.gray[500],
+  
+  // Màu viền
+  border: baseColors.gray[700],
+  divider: baseColors.gray[700],
+  
+  // Màu trạng thái
+  statusBar: baseColors.dark,
+  
+  // Màu ưu tiên và trạng thái
+  priority: baseColors.priority,
+  status: baseColors.status,
+  
+  // Các màu khác
+  shadow: 'rgba(0, 0, 0, 0.3)',
+  overlay: 'rgba(0, 0, 0, 0.7)',
+};
+
+// Export màu mặc định (để tương thích với code cũ)
+export const colors = {
+  ...lightTheme,
+  black: baseColors.black,
+  white: baseColors.white,
+  gray: baseColors.gray
 };
 
 export const fonts = {

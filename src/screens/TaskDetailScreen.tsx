@@ -1,28 +1,43 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
   ScrollView,
-  TouchableOpacity,
   Alert,
   StyleSheet,
   ToastAndroid,
   Platform,
 } from 'react-native';
+import Button from '@components/Button';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import moment from 'moment';
-import { RootStackParamList } from '../navigation/AppNavigator';
-import { useTaskContext } from '../context/TaskContext';
+import { TaskStackParamList } from '@navigation/AppNavigator';
+import { useTaskContext } from '@context/TaskContext';
 import { Task } from '../types/Task';
-import LoadingSpinner from '../components/LoadingSpinner';
-import { globalStyles } from '../styles/globalStyles';
-import { colors, spacing, borderRadius, fonts } from '../styles/theme';
-import { testNotification } from '../utils/notificationHelper';
+import LoadingSpinner from '@components/LoadingSpinner';
+import { globalStyles } from '@styles/globalStyles';
+import { spacing, borderRadius, fonts } from '@styles/theme';
+import { useTheme } from '@context/ThemeContext';
+import { testNotification } from '@utils/notificationHelper';
 
-type TaskDetailScreenNavigationProp = StackNavigationProp<RootStackParamList, 'TaskDetail'>;
-type TaskDetailScreenRouteProp = RouteProp<RootStackParamList, 'TaskDetail'>;
+// Define base colors for use in the component
+const baseColors = {
+  white: '#FFFFFF',
+  gray: {
+    50: '#F9FAFB',
+    100: '#F3F4F6',
+    300: '#D1D5DB',
+    400: '#9CA3AF',
+    500: '#6B7280',
+    600: '#4B5563',
+    700: '#374151'
+  }
+};
+
+type TaskDetailScreenNavigationProp = StackNavigationProp<TaskStackParamList, 'TaskDetail'>;
+type TaskDetailScreenRouteProp = RouteProp<TaskStackParamList, 'TaskDetail'>;
 
 interface Props {
   navigation: TaskDetailScreenNavigationProp;
@@ -32,16 +47,18 @@ interface Props {
 const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
   const { task: initialTask } = route.params;
   const { updateTask, deleteTask, loading } = useTaskContext();
+  const { colors } = useTheme();
   const [task, setTask] = useState<Task>(initialTask);
+  const styles = createStyles(colors);
 
-  const handleEdit = () => {
+  const handleEdit = useCallback(() => {
     navigation.navigate('AddEditTask', {
       mode: 'edit',
       task,
     });
-  };
+  }, [navigation, task]);
 
-  const handleDelete = () => {
+  const handleDelete = useCallback(async () => {
     Alert.alert(
       'Xác nhận xóa',
       'Bạn có chắc chắn muốn xóa công việc này?',
@@ -64,24 +81,28 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
         },
       ]
     );
-  };
+  }, [deleteTask, navigation, task]);
   
   useEffect(() => {
     navigation.setOptions({
       headerRight: () => (
         <View style={{ flexDirection: 'row' }}>
-          <TouchableOpacity
-            style={{ marginRight: 15 }}
+          <Button
+            icon="create-outline"
+            variant="icon"
             onPress={handleEdit}
-          >
-            <Icon name="create-outline" size={24} color={colors.white} />
-          </TouchableOpacity>
-          <TouchableOpacity
             style={{ marginRight: 15 }}
+            iconColor={baseColors.white}
+            iconSize={24}
+          />
+          <Button
+            icon="trash-outline"
+            variant="icon"
             onPress={handleDelete}
-          >
-            <Icon name="trash-outline" size={24} color={colors.white} />
-          </TouchableOpacity>
+            style={{ marginRight: 15 }}
+            iconColor={baseColors.white}
+            iconSize={24}
+          />
         </View>
       ),
     });
@@ -119,7 +140,7 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
       case 'low':
         return { label: 'Thấp', color: colors.success, icon: 'arrow-down' };
       default:
-        return { label: 'Không xác định', color: colors.gray[500], icon: 'help' };
+        return { label: 'Không xác định', color: colors.textSecondary, icon: 'help' };
     }
   };
 
@@ -130,7 +151,7 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
       case 'pending':
         return { label: 'Chưa hoàn thành', color: colors.warning, icon: 'time' };
       default:
-        return { label: 'Không xác định', color: colors.gray[500], icon: 'help' };
+        return { label: 'Không xác định', color: colors.textSecondary, icon: 'help' };
     }
   };
 
@@ -143,7 +164,7 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
   }
 
   return (
-    <ScrollView style={globalStyles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView style={[globalStyles.container, { backgroundColor: colors.background }]} showsVerticalScrollIndicator={false}>
       <View style={styles.content}>
         {/* Status Badge */}
         <View style={styles.statusContainer}>
@@ -188,7 +209,7 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Ngày đến hạn</Text>
             <View style={styles.dateContainer}>
-              <Icon name="calendar-outline" size={20} color={colors.gray[600]} />
+              <Icon name="calendar-outline" size={20} color={colors.textSecondary} />
               <Text style={[styles.dateText, isOverdue && { color: colors.error }]}>
                 {moment(task.due_date).format('DD/MM/YYYY HH:mm')}
               </Text>
@@ -204,7 +225,7 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
           <Text style={styles.sectionTitle}>Thông tin thời gian</Text>
           <View style={styles.timestampContainer}>
             <View style={styles.timestampRow}>
-              <Icon name="add-circle-outline" size={16} color={colors.gray[500]} />
+              <Icon name="add-circle-outline" size={16} color={colors.textDisabled} />
               <Text style={styles.timestampLabel}>Tạo lúc:</Text>
               <Text style={styles.timestampValue}>
                 {moment(task.created_at).format('DD/MM/YYYY HH:mm')}
@@ -212,7 +233,7 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
             </View>
             {task.updated_at && task.updated_at !== task.created_at && (
               <View style={styles.timestampRow}>
-                <Icon name="create-outline" size={16} color={colors.gray[500]} />
+                <Icon name="create-outline" size={16} color={colors.textDisabled} />
                 <Text style={styles.timestampLabel}>Cập nhật:</Text>
                 <Text style={styles.timestampValue}>
                   {moment(task.updated_at).format('DD/MM/YYYY HH:mm')}
@@ -223,60 +244,31 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
         </View>
 
         {/* Action Button */}
-        <TouchableOpacity
-          style={[
-            globalStyles.button,
-            task.status === 'completed' ? globalStyles.buttonSecondary : {},
-            { marginTop: spacing.xl ,flexDirection:"row", gap:8,alignItems:"center"},
-          ]}
+        <Button
+          title={task.status === 'completed' ? 'Đánh dấu chưa hoàn thành' : 'Đánh dấu hoàn thành'}
           onPress={handleToggleStatus}
-        >
-          <Icon
-            name={task.status === 'completed' ? 'refresh' : 'checkmark'}
-            size={20}
-            color={task.status === 'completed' ? colors.gray[600] : colors.white}
-            style={{ marginRight: spacing.xs }}
-          />
-          <Text
-            style={[
-              globalStyles.buttonText,
-              task.status === 'completed' ? globalStyles.buttonSecondaryText : {},
-            ]}
-          >
-            {task.status === 'completed' ? 'Đánh dấu chưa hoàn thành' : 'Đánh dấu hoàn thành'}
-          </Text>
-        </TouchableOpacity>
+          variant={task.status === 'completed' ? 'secondary' : 'primary'}
+          icon={task.status === 'completed' ? 'refresh' : 'checkmark'}
+          style={{ marginTop: spacing.xl }}
+        />
         
         {/* Test Notification Button */}
-        <TouchableOpacity
-          style={[
-            globalStyles.button,
-            globalStyles.buttonSecondary,
-            { marginTop: spacing.md, backgroundColor: colors.primary + '20',flexDirection:"row", gap:8,alignItems:"center"}
-          ]}
+        <Button
+          title="Kiểm tra thông báo"
           onPress={handleTestNotification}
-        >
-          <Icon
-            name="notifications-outline"
-            size={20}
-            color={colors.primary}
-            style={{ marginRight: spacing.xs }}
-          />
-          <Text
-            style={[
-              globalStyles.buttonText,
-              { color: colors.primary }
-            ]}
-          >
-            Kiểm tra thông báo
-          </Text>
-        </TouchableOpacity>
+          variant="secondary"
+          icon="notifications-outline"
+          iconColor={colors.primary}
+          style={{ marginTop: spacing.md, backgroundColor: colors.primary + '20' }}
+          textStyle={{ color: colors.primary }}
+        />
       </View>
     </ScrollView>
   );
 };
 
-const styles = StyleSheet.create({
+// Create styles with theme colors
+const createStyles = (colors: any) => StyleSheet.create({
   content: {
     padding: spacing.lg,
   },
@@ -301,7 +293,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: fonts.sizes.xl,
     fontWeight: 'bold',
-    color: colors.dark,
+    color: colors.text,
     marginBottom: spacing.lg,
     lineHeight: fonts.sizes.xl * 1.3,
   },
@@ -311,12 +303,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: fonts.sizes.md,
     fontWeight: '600',
-    color: colors.gray[700],
+    color: colors.textSecondary,
     marginBottom: spacing.sm,
   },
   description: {
     fontSize: fonts.sizes.md,
-    color: colors.gray[600],
+    color: colors.text,
     lineHeight: fonts.sizes.md * 1.5,
   },
   priorityBadge: {
@@ -340,16 +332,16 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: fonts.sizes.md,
-    color: colors.gray[700],
+    color: colors.text,
     fontWeight: '500',
   },
   relativeDateText: {
     fontSize: fonts.sizes.sm,
-    color: colors.gray[500],
+    color: colors.textDisabled,
     fontStyle: 'italic',
   },
   timestampContainer: {
-    backgroundColor: colors.gray[50],
+    backgroundColor: colors.surface,
     padding: spacing.md,
     borderRadius: borderRadius.md,
     gap: spacing.sm,
@@ -361,12 +353,12 @@ const styles = StyleSheet.create({
   },
   timestampLabel: {
     fontSize: fonts.sizes.sm,
-    color: colors.gray[600],
+    color: colors.textSecondary,
     minWidth: 70,
   },
   timestampValue: {
     fontSize: fonts.sizes.sm,
-    color: colors.gray[700],
+    color: colors.text,
     fontWeight: '500',
   },
 });

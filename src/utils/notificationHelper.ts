@@ -1,4 +1,4 @@
-import NotificationService from '../services/NotificationService';
+import NotificationService from '@services/NotificationService';
 import { Task } from '../types/Task';
 
 /**

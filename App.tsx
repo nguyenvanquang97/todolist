@@ -2,9 +2,22 @@ import React, { useEffect } from 'react';
 import { StatusBar, Platform, PermissionsAndroid } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { TaskProvider } from './src/context/TaskContext';
+import { ThemeProvider, useTheme } from './src/context/ThemeContext';
+import { SettingsProvider } from './src/context/SettingsContext';
 import AppNavigator from './src/navigation/AppNavigator';
-import { colors } from './src/styles/theme';
 import notifee from '@notifee/react-native';
+
+// Component StatusBar tùy chỉnh theo theme
+const AppStatusBar: React.FC = () => {
+  const { isDarkMode, colors } = useTheme();
+  
+  return (
+    <StatusBar
+      barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+      backgroundColor={colors.statusBar}
+    />
+  );
+};
 
 const App: React.FC = () => {
   useEffect(() => {
@@ -27,15 +40,16 @@ const App: React.FC = () => {
   }, []);
 
   return (
-    <TaskProvider>
-      <NavigationContainer>
-        <StatusBar
-          barStyle="light-content"
-          backgroundColor={colors.primary}
-        />
-        <AppNavigator />
-      </NavigationContainer>
-    </TaskProvider>
+    <SettingsProvider>
+      <ThemeProvider>
+        <TaskProvider>
+          <AppStatusBar />
+          <NavigationContainer>
+            <AppNavigator />
+          </NavigationContainer>
+        </TaskProvider>
+      </ThemeProvider>
+    </SettingsProvider>
   );
 };
 

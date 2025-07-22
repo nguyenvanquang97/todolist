@@ -1,8 +1,8 @@
-import React, { createContext, useContext, useReducer, useEffect, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useReducer, useCallback } from 'react';
 import { Task, TaskFilter, TaskContextType } from '../types/Task';
-import DatabaseHelper from '../database/DatabaseHelper';
-import NotificationService from '../services/NotificationService';
-import { scheduleNotificationsForTasks } from '../utils/notificationHelper';
+import DatabaseHelper from '@database/DatabaseHelper';
+import NotificationService from '@services/NotificationService';
+import { scheduleNotificationsForTasks } from '@utils/notificationHelper';
 
 interface TaskState {
   tasks: Task[];
@@ -67,11 +67,6 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
   const dbHelper = DatabaseHelper.getInstance();
   const notificationService = NotificationService.getInstance();
 
-  useEffect(() => {
-    initializeDatabase();
-    initializeNotifications();
-  }, [initializeDatabase, initializeNotifications]);
-
   const initializeNotifications = useCallback(async () => {
     try {
       await notificationService.createNotificationChannel();
@@ -101,6 +96,11 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
       console.error('Database initialization error:', error);
     }
   }, [dbHelper, dispatch]);
+
+  useEffect(() => {
+    initializeDatabase();
+    initializeNotifications();
+  }, [initializeDatabase, initializeNotifications]);
 
   const loadTasks = async () => {
     try {

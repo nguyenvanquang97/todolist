@@ -1,3 +1,5 @@
+import { Dimensions } from "react-native";
+
 // Database constants
 export const DATABASE_NAME = 'TodoApp.db';
 export const DATABASE_VERSION = '1.0';
@@ -144,3 +146,6 @@ export const DEFAULT_VALUES = {
   FILTER_STATUS: FILTER_OPTIONS.ALL,
   FILTER_PRIORITY: FILTER_OPTIONS.ALL,
 } as const;
+
+export const DEVICE_WIDTH = Dimensions.get('window').width;
+export const DEVICE_HEIGHT = Dimensions.get('window').height;

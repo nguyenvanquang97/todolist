@@ -9,8 +9,8 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons';
 import moment from 'moment';
 import { Task } from '../types/Task';
-import { colors, spacing, borderRadius, fonts } from '../styles/theme';
-import { globalStyles } from '../styles/globalStyles';
+import { spacing, borderRadius, fonts, baseColors } from '@styles/theme';
+import { useTheme } from '@context/ThemeContext';
 
 interface TaskItemProps {
   task: Task;
@@ -25,6 +25,7 @@ const TaskItem: React.FC<TaskItemProps> = ({
   onToggleStatus,
   onDelete,
 }) => {
+  const { colors } = useTheme();
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
@@ -34,7 +35,7 @@ const TaskItem: React.FC<TaskItemProps> = ({
       case 'low':
         return colors.priority.low;
       default:
-        return colors.gray[400];
+        return baseColors.gray[400];
     }
   };
 
@@ -56,7 +57,7 @@ const TaskItem: React.FC<TaskItemProps> = ({
   };
 
   const getStatusColor = (status: string) => {
-    return status === 'completed' ? colors.success : colors.gray[400];
+    return status === 'completed' ? colors.success : baseColors.gray[400];
   };
 
   const handleToggleStatus = () => {
@@ -88,8 +89,9 @@ const TaskItem: React.FC<TaskItemProps> = ({
     <TouchableOpacity
       style={[
         styles.container,
+        { backgroundColor: colors.card },
         task.status === 'completed' && styles.completedTask,
-        isOverdue && styles.overdueTask,
+        isOverdue && { borderLeftWidth: 4, borderLeftColor: colors.danger },
       ]}
       onPress={onPress}
       activeOpacity={0.7}
@@ -108,7 +110,11 @@ const TaskItem: React.FC<TaskItemProps> = ({
             <Text
               style={[
                 styles.title,
-                task.status === 'completed' && styles.completedText,
+                { color: colors.text },
+                task.status === 'completed' && { 
+                  textDecorationLine: 'line-through',
+                  color: colors.textDisabled 
+                },
               ]}
               numberOfLines={2}
             >
@@ -119,7 +125,11 @@ const TaskItem: React.FC<TaskItemProps> = ({
               <Text
                 style={[
                   styles.description,
-                  task.status === 'completed' && styles.completedText,
+                  { color: colors.textSecondary },
+                  task.status === 'completed' && { 
+                    textDecorationLine: 'line-through',
+                    color: colors.textDisabled 
+                  },
                 ]}
                 numberOfLines={2}
               >
@@ -183,12 +193,13 @@ const TaskItem: React.FC<TaskItemProps> = ({
               <Icon
                 name="calendar-outline"
                 size={14}
-                color={isOverdue ? colors.danger : colors.gray[500]}
+                color={isOverdue ? colors.danger : colors.textSecondary}
               />
               <Text
                 style={[
                   styles.dueDate,
-                  isOverdue && styles.overdueDateText,
+                  { color: colors.textSecondary },
+                  isOverdue && { color: colors.danger, fontWeight: '600' },
                 ]}
               >
                 {moment(task.due_date).format('DD/MM/YYYY')}
@@ -203,12 +214,10 @@ const TaskItem: React.FC<TaskItemProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.white,
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     marginVertical: spacing.xs,
     marginHorizontal: spacing.md,
-    shadowColor: colors.black,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -219,10 +228,6 @@ const styles = StyleSheet.create({
   },
   completedTask: {
     opacity: 0.7,
-  },
-  overdueTask: {
-    borderLeftWidth: 4,
-    borderLeftColor: colors.danger,
   },
   content: {
     flex: 1,
@@ -241,29 +246,23 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: fonts.sizes.md,
-    fontWeight: '600',
-    color: colors.dark,
+    fontWeight: '600' as const,
     marginBottom: spacing.xs,
   },
   description: {
     fontSize: fonts.sizes.sm,
-    color: colors.gray[600],
     lineHeight: 20,
-  },
-  completedText: {
-    textDecorationLine: 'line-through',
-    color: colors.gray[500],
   },
   deleteButton: {
     padding: spacing.xs,
   },
   footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
   },
   badges: {
-    flexDirection: 'row',
+    flexDirection: 'row' as const,
     flex: 1,
   },
   priorityBadge: {
@@ -274,7 +273,7 @@ const styles = StyleSheet.create({
   },
   priorityText: {
     fontSize: fonts.sizes.xs,
-    fontWeight: '600',
+    fontWeight: '600' as const,
   },
   statusBadge: {
     paddingHorizontal: spacing.sm,
@@ -283,20 +282,15 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: fonts.sizes.xs,
-    fontWeight: '600',
+    fontWeight: '600' as const,
   },
   dueDateContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
   },
   dueDate: {
     fontSize: fonts.sizes.xs,
-    color: colors.gray[500],
     marginLeft: spacing.xs,
-  },
-  overdueDateText: {
-    color: colors.danger,
-    fontWeight: '600',
   },
 });
 

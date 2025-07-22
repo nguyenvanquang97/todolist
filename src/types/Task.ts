@@ -32,3 +32,10 @@ export interface TaskContextType {
   filterTasks: (filter: TaskFilter) => Promise<void>;
   clearError: () => void;
 }
+
+export interface AppSettings {
+  id?: number;
+  theme: 'light' | 'dark' | 'system';
+  notifications_enabled: boolean;
+  last_updated?: string;
+}

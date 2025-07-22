@@ -1,51 +1,54 @@
 import { StyleSheet } from 'react-native';
-import { colors, fonts, spacing, borderRadius, shadows } from './theme';
+import { spacing, borderRadius, fonts } from './theme';
 
-export const globalStyles = StyleSheet.create({
+// Lưu ý: Chúng ta không import colors trực tiếp nữa
+// Thay vào đó, chúng ta sẽ sử dụng colors từ ThemeContext
+
+export const createGlobalStyles = (colors: any) => ({
   container: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: colors.background,
   },
   safeArea: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: colors.background,
   },
   screenPadding: {
     paddingHorizontal: spacing.md,
   },
   centerContent: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
   },
   row: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
   },
   spaceBetween: {
-    justifyContent: 'space-between',
+    justifyContent: 'space-between' as const,
   },
   // Text styles
   title: {
     fontSize: fonts.sizes.xxl,
-    fontWeight: 'bold',
-    color: colors.dark,
+    fontWeight: 'bold' as const,
+    color: colors.text,
     marginBottom: spacing.md,
   },
   subtitle: {
     fontSize: fonts.sizes.lg,
-    fontWeight: '600',
-    color: colors.dark,
+    fontWeight: '600' as const,
+    color: colors.text,
     marginBottom: spacing.sm,
   },
   bodyText: {
     fontSize: fonts.sizes.md,
-    color: colors.gray[700],
+    color: colors.textSecondary,
     lineHeight: 24,
   },
   caption: {
     fontSize: fonts.sizes.sm,
-    color: colors.gray[500],
+    color: colors.textDisabled,
   },
   // Button styles
   button: {
@@ -53,22 +56,22 @@ export const globalStyles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
     borderRadius: borderRadius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
     minHeight: 44,
   },
   buttonText: {
     color: colors.white,
     fontSize: fonts.sizes.md,
-    fontWeight: '600',
+    fontWeight: '600' as const,
   },
   buttonSecondary: {
-    backgroundColor: colors.gray[100],
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.gray[300],
+    borderColor: colors.border,
   },
   buttonSecondaryText: {
-    color: colors.gray[700],
+    color: colors.text,
   },
   buttonDanger: {
     backgroundColor: colors.danger,
@@ -79,12 +82,13 @@ export const globalStyles = StyleSheet.create({
   // Input styles
   input: {
     borderWidth: 1,
-    borderColor: colors.gray[300],
+    borderColor: colors.border,
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.sm,
     fontSize: fonts.sizes.md,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
+    color: colors.text,
     minHeight: 44,
   },
   inputFocused: {
@@ -100,16 +104,23 @@ export const globalStyles = StyleSheet.create({
   },
   // Card styles
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.card,
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     marginVertical: spacing.xs,
-    ...shadows.md,
+    shadowColor: colors.shadow,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'flex-start' as const,
     marginBottom: spacing.sm,
   },
   // List styles
@@ -117,44 +128,51 @@ export const globalStyles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   listItem: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.card,
     borderRadius: borderRadius.md,
     padding: spacing.md,
     marginVertical: spacing.xs,
     marginHorizontal: spacing.md,
-    ...shadows.sm,
+    shadowColor: colors.shadow,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   listItemPressed: {
-    backgroundColor: colors.gray[50],
+    backgroundColor: colors.surface,
   },
   // Modal styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: colors.overlay,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
   },
   modalContent: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.card,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     margin: spacing.md,
-    maxHeight: '80%',
-    width: '90%',
+    maxHeight: DEVICE_HEIGHT*0.8,
+    width: DEVICE_WIDTH*0.9,
   },
   modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
     marginBottom: spacing.md,
     paddingBottom: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: colors.gray[200],
+    borderBottomColor: colors.divider,
   },
   modalTitle: {
     fontSize: fonts.sizes.lg,
-    fontWeight: '600',
-    color: colors.dark,
+    fontWeight: '600' as const,
+    color: colors.text,
   },
   // Form styles
   formGroup: {
@@ -162,8 +180,8 @@ export const globalStyles = StyleSheet.create({
   },
   label: {
     fontSize: fonts.sizes.sm,
-    fontWeight: '600',
-    color: colors.gray[700],
+    fontWeight: '600' as const,
+    color: colors.textSecondary,
     marginBottom: spacing.xs,
   },
   errorText: {
@@ -176,12 +194,12 @@ export const globalStyles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.full,
-    alignSelf: 'flex-start',
+    alignSelf: 'flex-start' as const,
   },
   priorityText: {
     fontSize: fonts.sizes.xs,
-    fontWeight: '600',
-    textTransform: 'uppercase',
+    fontWeight: '600' as const,
+    textTransform: 'uppercase' as const,
   },
   priorityLow: {
     backgroundColor: colors.priority.low + '20',
@@ -206,12 +224,12 @@ export const globalStyles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.full,
-    alignSelf: 'flex-start',
+    alignSelf: 'flex-start' as const,
   },
   statusText: {
     fontSize: fonts.sizes.xs,
-    fontWeight: '600',
-    textTransform: 'uppercase',
+    fontWeight: '600' as const,
+    textTransform: 'uppercase' as const,
   },
   statusPending: {
     backgroundColor: colors.status.pending + '20',
@@ -228,40 +246,38 @@ export const globalStyles = StyleSheet.create({
   // Loading styles
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.white,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    backgroundColor: colors.background,
   },
   loadingText: {
     marginTop: spacing.md,
     fontSize: fonts.sizes.md,
-    color: colors.gray[600],
+    color: colors.textSecondary,
   },
   // Empty state styles
   emptyContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
     paddingHorizontal: spacing.lg,
   },
   emptyText: {
     fontSize: fonts.sizes.lg,
-    fontWeight: '600',
-    color: colors.gray[600],
-    textAlign: 'center',
+    fontWeight: '600' as const,
+    textAlign: 'center' as const,
     marginBottom: spacing.sm,
   },
   emptySubtext: {
     fontSize: fonts.sizes.md,
-    color: colors.gray[500],
-    textAlign: 'center',
+    textAlign: 'center' as const,
     lineHeight: 22,
   },
 
   // Form styles
   formContainer: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: colors.background,
     paddingHorizontal: spacing.md,
   },
   inputGroup: {
@@ -274,13 +290,13 @@ export const globalStyles = StyleSheet.create({
   },
   characterCount: {
     fontSize: fonts.sizes.sm,
-    color: colors.gray[500],
+    color: colors.textDisabled,
     textAlign: 'right',
     marginTop: spacing.xs,
   },
   priorityContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
     marginTop: spacing.sm,
   },
   priorityOption: {
@@ -288,20 +304,35 @@ export const globalStyles = StyleSheet.create({
     marginHorizontal: spacing.xs,
   },
   dateButton: {
-    backgroundColor: colors.gray[100],
+    backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.md,
     borderWidth: 1,
-    borderColor: colors.gray[300],
+    borderColor: colors.border,
   },
   dateButtonText: {
     fontSize: fonts.sizes.md,
-    color: colors.dark,
+    color: colors.text,
   },
   buttonDisabled: {
     opacity: 0.6,
   },
 });
 
-export default globalStyles;
+// Tạo một hook để sử dụng globalStyles với theme hiện tại
+import { useTheme } from '../context/ThemeContext';
+import { useMemo } from 'react';
+
+export const useGlobalStyles = () => {
+  const { colors } = useTheme();
+  
+  // Sử dụng useMemo để tránh tạo lại styles mỗi khi component render
+  return useMemo(() => StyleSheet.create(createGlobalStyles(colors)), [colors]);
+};
+
+// Xuất globalStyles cũ để tương thích với code hiện tại
+// Sẽ sử dụng lightTheme làm mặc định
+import { lightTheme } from './theme';
+import { DEVICE_HEIGHT, DEVICE_WIDTH } from '@/utils/constants';
+export const globalStyles = StyleSheet.create(createGlobalStyles(lightTheme));

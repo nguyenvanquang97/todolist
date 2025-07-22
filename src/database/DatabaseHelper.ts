@@ -1,12 +1,13 @@
 import SQLite from 'react-native-sqlite-storage';
-import { Task, TaskFilter, DatabaseResult } from '../types/Task';
+import { Task, TaskFilter, DatabaseResult, AppSettings } from '../types/Task';
+import SQLiteModule from 'react-native-sqlite-storage';
 
 // Enable promise for SQLite
-SQLite.enablePromise(true);
+SQLiteModule.enablePromise(true);
 
 class DatabaseHelper {
   private static instance: DatabaseHelper;
-  private database: SQLite.SQLiteDatabase | null = null;
+  private database: any = null;
 
   private constructor() {}
 
@@ -17,10 +18,10 @@ class DatabaseHelper {
     return DatabaseHelper.instance;
   }
 
-  public async initDatabase(): Promise<SQLite.SQLiteDatabase> {
+  public async initDatabase(): Promise<any> {
     try {
       if (!this.database) {
-        this.database = await SQLite.openDatabase({
+        this.database = await SQLiteModule.openDatabase({
           name: 'TodoApp.db',
           location: 'default',
         });
@@ -35,7 +36,7 @@ class DatabaseHelper {
   }
 
   private async createTasksTable(): Promise<void> {
-    const createTableQuery = `
+    const createTasksTableQuery = `
       CREATE TABLE IF NOT EXISTS tasks (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT NOT NULL,
@@ -47,11 +48,47 @@ class DatabaseHelper {
       );
     `;
 
+    const createSettingsTableQuery = `
+      CREATE TABLE IF NOT EXISTS settings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        theme TEXT NOT NULL,
+        notifications_enabled INTEGER NOT NULL,
+        last_updated TEXT
+      );
+    `;
+
     try {
-      await this.database?.executeSql(createTableQuery);
-      console.log('Tasks table created successfully');
+      await this.database?.executeSql(createTasksTableQuery);
+      await this.database?.executeSql(createSettingsTableQuery);
+      console.log('Database tables created successfully');
+      
+      // Initialize settings if not exists
+      await this.initializeSettings();
     } catch (error) {
-      console.error('Error creating tasks table:', error);
+      console.error('Error creating database tables:', error);
+      throw error;
+    }
+  }
+
+  private async initializeSettings(): Promise<void> {
+    try {
+      // Check if settings already exist
+      const checkQuery = 'SELECT COUNT(*) as count FROM settings;';
+      const result = await this.database?.executeSql(checkQuery);
+      const count = result?.[0].rows.item(0).count;
+
+      if (count === 0) {
+        // Insert default settings
+        const insertQuery = `
+          INSERT INTO settings (theme, notifications_enabled, last_updated)
+          VALUES (?, ?, ?);
+        `;
+        const now = new Date().toISOString();
+        await this.database?.executeSql(insertQuery, ['system', 1, now]);
+        console.log('Default settings initialized');
+      }
+    } catch (error) {
+      console.error('Error initializing settings:', error);
       throw error;
     }
   }
@@ -207,6 +244,64 @@ class DatabaseHelper {
       return tasks;
     } catch (error) {
       console.error('Error filtering tasks:', error);
+      throw error;
+    }
+  }
+
+  public async getSettings(): Promise<AppSettings> {
+    const query = 'SELECT * FROM settings ORDER BY id DESC LIMIT 1;';
+
+    try {
+      const result = await this.database?.executeSql(query);
+      if (result && result[0].rows.length > 0) {
+        const settings = result[0].rows.item(0);
+        return {
+          id: settings.id,
+          theme: settings.theme,
+          notifications_enabled: Boolean(settings.notifications_enabled),
+          last_updated: settings.last_updated
+        };
+      }
+      throw new Error('No settings found');
+    } catch (error) {
+      console.error('Error getting settings:', error);
+      throw error;
+    }
+  }
+
+  public async updateSettings(settings: Partial<AppSettings>): Promise<DatabaseResult> {
+    const updateFields: string[] = [];
+    const values: any[] = [];
+
+    Object.entries(settings).forEach(([key, value]) => {
+      if (key !== 'id' && value !== undefined) {
+        updateFields.push(`${key} = ?`);
+        // Convert boolean to integer for SQLite
+        if (typeof value === 'boolean') {
+          values.push(value ? 1 : 0);
+        } else {
+          values.push(value);
+        }
+      }
+    });
+
+    if (updateFields.length === 0) {
+      throw new Error('No fields to update');
+    }
+
+    // Add last_updated timestamp
+    updateFields.push('last_updated = ?');
+    values.push(new Date().toISOString());
+
+    const updateQuery = `UPDATE settings SET ${updateFields.join(', ')} WHERE id = (SELECT id FROM settings ORDER BY id DESC LIMIT 1);`;
+
+    try {
+      const result = await this.database?.executeSql(updateQuery, values);
+      return {
+        rowsAffected: result?.[0].rowsAffected || 0,
+      };
+    } catch (error) {
+      console.error('Error updating settings:', error);
       throw error;
     }
   }

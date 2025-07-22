@@ -9,17 +9,19 @@ import {
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { RootStackParamList } from '../navigation/AppNavigator';
-import { useTaskContext } from '../context/TaskContext';
+import { TaskStackParamList } from '@navigation/AppNavigator';
+import { useTaskContext } from '@context/TaskContext';
 import { Task, TaskFilter } from '../types/Task';
-import TaskItem from '../components/TaskItem';
-import SearchBar from '../components/SearchBar';
-import FilterModal from '../components/FilterModal';
-import LoadingSpinner from '../components/LoadingSpinner';
-import { globalStyles } from '../styles/globalStyles';
-import { colors, spacing } from '../styles/theme';
+import TaskItem from '@components/TaskItem';
+import SearchBar from '@components/SearchBar';
+import FilterModal from '@components/FilterModal';
+import LoadingSpinner from '@components/LoadingSpinner';
+import { globalStyles } from '@styles/globalStyles';
+import { spacing, borderRadius, fonts, baseColors } from '@styles/theme';
+import { useTheme } from '@context/ThemeContext';
+import Button from '@/components/Button';
 
-type TaskListScreenNavigationProp = StackNavigationProp<RootStackParamList, 'TaskList'>;
+type TaskListScreenNavigationProp = StackNavigationProp<TaskStackParamList, 'TaskList'>;
 
 interface Props {
   navigation: TaskListScreenNavigationProp;
@@ -37,6 +39,8 @@ const TaskListScreen: React.FC<Props> = ({ navigation }) => {
     filterTasks,
     clearError,
   } = useTaskContext();
+  
+  const { colors } = useTheme();
 
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [currentFilter, setCurrentFilter] = useState<TaskFilter>({
@@ -54,18 +58,18 @@ const TaskListScreen: React.FC<Props> = ({ navigation }) => {
             style={{ marginRight: 15 }}
             onPress={() => setShowFilterModal(true)}
           >
-            <Icon name="filter" size={24} color={colors.white} />
+            <Icon name="filter" size={24} color={baseColors.white} />
           </TouchableOpacity>
           <TouchableOpacity
             style={{ marginRight: 15 }}
             onPress={() => navigation.navigate('AddEditTask', { mode: 'add' })}
           >
-            <Icon name="add" size={24} color={colors.white} />
+            <Icon name="add" size={24} color={baseColors.white} />
           </TouchableOpacity>
         </View>
       ),
     });
-  }, [navigation]);
+  }, [navigation, colors]);
 
   useEffect(() => {
     if (error) {
@@ -142,26 +146,25 @@ const TaskListScreen: React.FC<Props> = ({ navigation }) => {
   );
 
   const renderEmptyState = () => (
-    <View style={globalStyles.emptyContainer}>
-      <Icon name="clipboard-outline" size={64} color={colors.gray[400]} />
-      <Text style={globalStyles.emptyText}>
+    <View style={[globalStyles.emptyContainer, { backgroundColor: colors.background }]}>
+      <Icon name="clipboard-outline" size={64} color={colors.textDisabled} />
+      <Text style={[globalStyles.emptyText, { color: colors.text }]}>
         {currentFilter.searchQuery || currentFilter.status !== 'all' || currentFilter.priority !== 'all'
           ? 'Không tìm thấy công việc nào'
           : 'Chưa có công việc nào'}
       </Text>
-      <Text style={globalStyles.emptySubtext}>
+      <Text style={[globalStyles.emptySubtext, { color: colors.textSecondary }]}>
         {currentFilter.searchQuery || currentFilter.status !== 'all' || currentFilter.priority !== 'all'
           ? 'Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm'
           : 'Nhấn nút + để thêm công việc mới'}
       </Text>
       {(!currentFilter.searchQuery && currentFilter.status === 'all' && currentFilter.priority === 'all') && (
-        <TouchableOpacity
-          style={[globalStyles.button, { marginTop: spacing.lg }]}
-          onPress={() => navigation.navigate('AddEditTask', { mode: 'add' })}
-        >
-          <Text style={globalStyles.buttonText}>Thêm công việc đầu tiên</Text>
-        </TouchableOpacity>
-      )}
+          <Button
+            title="Thêm công việc đầu tiên"
+            style={{ marginTop: spacing.lg }}
+            onPress={() => navigation.navigate('AddEditTask', { mode: 'add' })}
+          />
+        )}
     </View>
   );
 
@@ -170,7 +173,7 @@ const TaskListScreen: React.FC<Props> = ({ navigation }) => {
   }
 
   return (
-    <View style={globalStyles.container}>
+    <View style={[globalStyles.container, { backgroundColor: colors.background }]}>
       <SearchBar
         onSearch={handleSearch}
         onClear={() => handleSearch('')}
