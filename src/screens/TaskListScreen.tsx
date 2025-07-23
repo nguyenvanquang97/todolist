@@ -113,6 +113,9 @@ const TaskListScreen: React.FC<Props> = ({ navigation }) => {
     }
   }, [currentFilter, searchTasks, applyCurrentFilter]);
 
+  // Keep SearchBar in sync with current filter
+  const searchQuery = useMemo(() => currentFilter.searchQuery, [currentFilter.searchQuery]);
+
   const handleToggleStatus = useCallback(async (id: number, status: 'pending' | 'completed') => {
     try {
       await updateTask(id, { status });
@@ -232,6 +235,7 @@ const TaskListScreen: React.FC<Props> = ({ navigation }) => {
       <SearchBar
         onSearch={handleSearch}
         onClear={() => handleSearch('')}
+        value={searchQuery}
       />
 
       <FlatList

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import React from 'react';
 import {
   View,
   TextInput,
@@ -14,14 +15,15 @@ interface SearchBarProps {
   placeholder?: string;
   onSearch: (query: string) => void;
   onClear?: () => void;
+  value?: string;
 }
 
 const SearchBar: React.FC<SearchBarProps> = ({
   placeholder,
   onSearch,
   onClear,
+  value = '',
 }) => {
-  const [searchQuery, setSearchQuery] = useState('');
   const { colors, isDarkMode } = useTheme();
   const { t } = useTranslation();
 
@@ -29,15 +31,16 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const searchPlaceholder = placeholder || t('taskList.searchPlaceholder');
 
   const handleSearch = (text: string) => {
-    setSearchQuery(text);
     onSearch(text);
   };
 
   const handleClear = () => {
-    setSearchQuery('');
     onSearch('');
     onClear?.();
   };
+
+  console.log(value);
+
 
   return (
     <View style={styles.container}>
@@ -47,12 +50,12 @@ const SearchBar: React.FC<SearchBarProps> = ({
           style={[styles.input, { color: colors.text }]}
           placeholder={searchPlaceholder}
           placeholderTextColor={colors.textDisabled}
-          value={searchQuery}
+          value={value}
           onChangeText={handleSearch}
           returnKeyType="search"
-          onSubmitEditing={() => onSearch(searchQuery)}
+          onSubmitEditing={() => onSearch(value)}
         />
-        {searchQuery.length > 0 && (
+        {value.length > 0 && (
           <TouchableOpacity onPress={handleClear} style={styles.clearButton}>
             <Icon name="close-circle" size={20} color={colors.textSecondary} />
           </TouchableOpacity>

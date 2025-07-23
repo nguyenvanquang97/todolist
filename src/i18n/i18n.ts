@@ -24,6 +24,9 @@ type TranslationKey =
   | 'task.search'
   | 'task.empty'
   | 'taskList.searchPlaceholder'
+  | 'taskList.searchAccessibilityLabel'
+  | 'taskList.searchAccessibilityHint'
+  | 'taskList.clearSearchAccessibilityLabel'
   | 'taskList.title'
   | 'taskDetail.title'
   | 'date.today'
@@ -242,6 +245,9 @@ const en: Translations = {
   'taskList.filterStatus': 'Status',
   'taskList.filterPriority': 'Priority',
   'taskList.searchPlaceholder': 'Search tasks...',
+  'taskList.searchAccessibilityLabel': 'Search tasks',
+  'taskList.searchAccessibilityHint': 'Enter text to search for tasks',
+  'taskList.clearSearchAccessibilityLabel': 'Clear search text',
   'taskList.errors.notFound': 'Task not found',
   'taskList.success.created': 'Task created successfully',
   'taskList.success.updated': 'Task updated successfully',
@@ -384,6 +390,9 @@ const vi: Translations = {
   'taskList.filterStatus': 'Trạng thái',
   'taskList.filterPriority': 'Mức độ ưu tiên',
   'taskList.searchPlaceholder': 'Tìm kiếm công việc...',
+  'taskList.searchAccessibilityLabel': 'Tìm kiếm công việc',
+  'taskList.searchAccessibilityHint': 'Nhập văn bản để tìm kiếm công việc',
+  'taskList.clearSearchAccessibilityLabel': 'Xóa văn bản tìm kiếm',
   'taskList.errors.notFound': 'Không tìm thấy công việc',
   'taskList.success.created': 'Công việc đã được tạo thành công',
   'taskList.success.updated': 'Công việc đã được cập nhật thành công',
