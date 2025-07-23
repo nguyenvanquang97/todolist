@@ -140,8 +140,8 @@ class DatabaseHelper {
 
   public async insertTask(task: Omit<Task, 'id' | 'created_at'>): Promise<DatabaseResult> {
     const insertQuery = `
-      INSERT INTO tasks (title, description, due_date, priority, status, created_at)
-      VALUES (?, ?, ?, ?, ?, ?);
+      INSERT INTO tasks (title, description, due_date, priority, status, created_at, category_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?);
     `;
 
     const createdAt = new Date().toISOString();
@@ -152,6 +152,7 @@ class DatabaseHelper {
       task.priority,
       task.status,
       createdAt,
+      task.category_id || null,
     ];
 
     try {
@@ -626,7 +627,7 @@ class DatabaseHelper {
           tags.push(result[0].rows.item(i));
         }
       }
-
+      
       return tags;
     } catch (error) {
       console.error('Error getting tags for task:', error);

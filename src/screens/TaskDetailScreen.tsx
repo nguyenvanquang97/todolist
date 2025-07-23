@@ -54,6 +54,8 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
   const [loadingTags, setLoadingTags] = useState(false);
   const styles = createStyles(colors);
 
+  console.log("taskTags", taskTags);
+
   const handleEdit = useCallback(() => {
     navigation.navigate('AddEditTask', {
       mode: 'edit',

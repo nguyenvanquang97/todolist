@@ -62,6 +62,7 @@ export const lightTheme = {
 
   // Màu trạng thái
   statusBar: baseColors.primary,
+  navigationBar: baseColors.white,
 
   // Màu ưu tiên và trạng thái
   priority: baseColors.priority,
@@ -100,6 +101,7 @@ export const darkTheme = {
 
   // Màu trạng thái
   statusBar: baseColors.dark,
+  navigationBar: baseColors.dark,
 
   // Màu ưu tiên và trạng thái
   priority: baseColors.priority,

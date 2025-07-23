@@ -6,10 +6,27 @@ import {ThemeProvider, useTheme} from './src/context/ThemeContext';
 import {SettingsProvider} from './src/context/SettingsContext';
 import notifee from '@notifee/react-native';
 import {RootStackNavigator, navigationRef} from '@/navigation/index';
+import changeNavigationBarColor from 'react-native-navigation-bar-color';
 
 // Component StatusBar tùy chỉnh theo theme
 const AppStatusBar: React.FC = () => {
   const {isDarkMode, colors} = useTheme();
+
+  useEffect(() => {
+    // Thay đổi màu thanh điều hướng Android theo theme
+    if (Platform.OS === 'android') {
+      try {
+        // Đặt màu thanh điều hướng theo theme hiện tại
+        changeNavigationBarColor(
+          colors.navigationBar, // Sử dụng màu navigationBar từ theme
+          !isDarkMode, // Light icons nếu theme tối
+          false, // Không animation
+        );
+      } catch (e) {
+        console.error('Không thể thay đổi màu thanh điều hướng:', e);
+      }
+    }
+  }, [isDarkMode, colors]);
 
   return (
     <StatusBar

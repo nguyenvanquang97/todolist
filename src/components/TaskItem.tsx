@@ -1,18 +1,12 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-} from 'react-native';
+import {View, Text, TouchableOpacity, StyleSheet, Alert} from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import moment from 'moment';
-import { Task } from '../types/Task';
-import { spacing, borderRadius, fonts, baseColors } from '@styles/theme';
-import { useTheme } from '@context/ThemeContext';
-import { useTranslation } from '@i18n/i18n';
-import { useTaskContext } from '@context/TaskContext';
+import {Task} from '../types/Task';
+import {spacing, borderRadius, fonts, baseColors} from '@styles/theme';
+import {useTheme} from '@context/ThemeContext';
+import {useTranslation} from '@i18n/i18n';
+import {useTaskContext} from '@context/TaskContext';
 
 export interface TaskItemProps {
   task: Task;
@@ -27,9 +21,9 @@ const TaskItem: React.FC<TaskItemProps> = ({
   onToggleStatus,
   onDelete,
 }) => {
-  const { colors } = useTheme();
-  const { t } = useTranslation();
-  const { categories } = useTaskContext();
+  const {colors} = useTheme();
+  const {t} = useTranslation();
+  const {categories} = useTaskContext();
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
@@ -83,26 +77,30 @@ const TaskItem: React.FC<TaskItemProps> = ({
           style: 'destructive',
           onPress: () => onDelete(task.id!),
         },
-      ]
+      ],
     );
   };
 
-  const isOverdue = task.due_date && moment(task.due_date).isBefore(moment(), 'day') && task.status === 'pending';
+  const isOverdue =
+    task.due_date &&
+    moment(task.due_date).isBefore(moment(), 'day') &&
+    task.status === 'pending';
 
   return (
     <TouchableOpacity
       style={[
         styles.container,
-        { backgroundColor: colors.card },
+        {backgroundColor: colors.card},
         task.status === 'completed' && styles.completedTask,
-        isOverdue && { borderLeftWidth: 4, borderLeftColor: colors.danger },
+        isOverdue && {borderLeftWidth: 4, borderLeftColor: colors.danger},
       ]}
       onPress={onPress}
-      activeOpacity={0.7}
-    >
+      activeOpacity={0.7}>
       <View style={styles.content}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={handleToggleStatus} style={styles.statusButton}>
+          <TouchableOpacity
+            onPress={handleToggleStatus}
+            style={styles.statusButton}>
             <Icon
               name={getStatusIcon(task.status)}
               size={24}
@@ -114,14 +112,13 @@ const TaskItem: React.FC<TaskItemProps> = ({
             <Text
               style={[
                 styles.title,
-                { color: colors.text },
+                {color: colors.text},
                 task.status === 'completed' && {
                   textDecorationLine: 'line-through',
                   color: colors.textDisabled,
                 },
               ]}
-              numberOfLines={2}
-            >
+              numberOfLines={2}>
               {task.title}
             </Text>
 
@@ -129,14 +126,13 @@ const TaskItem: React.FC<TaskItemProps> = ({
               <Text
                 style={[
                   styles.description,
-                  { color: colors.textSecondary },
+                  {color: colors.textSecondary},
                   task.status === 'completed' && {
                     textDecorationLine: 'line-through',
                     color: colors.textDisabled,
                   },
                 ]}
-                numberOfLines={2}
-              >
+                numberOfLines={2}>
                 {task.description}
               </Text>
             )}
@@ -152,15 +148,13 @@ const TaskItem: React.FC<TaskItemProps> = ({
             <View
               style={[
                 styles.priorityBadge,
-                { backgroundColor: getPriorityColor(task.priority) + '20' },
-              ]}
-            >
+                {backgroundColor: getPriorityColor(task.priority) + '20'},
+              ]}>
               <Text
                 style={[
                   styles.priorityText,
-                  { color: getPriorityColor(task.priority) },
-                ]}
-              >
+                  {color: getPriorityColor(task.priority)},
+                ]}>
                 {getPriorityText(task.priority)}
               </Text>
             </View>
@@ -174,8 +168,7 @@ const TaskItem: React.FC<TaskItemProps> = ({
                       ? colors.success + '20'
                       : colors.warning + '20',
                 },
-              ]}
-            >
+              ]}>
               <Text
                 style={[
                   styles.statusText,
@@ -185,38 +178,12 @@ const TaskItem: React.FC<TaskItemProps> = ({
                         ? colors.success
                         : colors.warning,
                   },
-                ]}
-              >
-                {task.status === 'completed' ? t('status.completed') : t('status.pending')}
+                ]}>
+                {task.status === 'completed'
+                  ? t('status.completed')
+                  : t('status.pending')}
               </Text>
             </View>
-            
-            {/* Category Badge */}
-            {task.category_id && categories.map(category => {
-              if (category.id === task.category_id) {
-                return (
-                  <View
-                    key={category.id}
-                    style={[
-                      styles.categoryBadge,
-                      { backgroundColor: category.color + '20' },
-                    ]}
-                  >
-                    <View style={[styles.categoryDot, { backgroundColor: category.color }]} />
-                    <Text
-                      style={[
-                        styles.categoryText,
-                        { color: category.color },
-                      ]}
-                      numberOfLines={1}
-                    >
-                      {category.name}
-                    </Text>
-                  </View>
-                );
-              }
-              return null;
-            })}
           </View>
 
           {task.due_date && (
@@ -229,14 +196,42 @@ const TaskItem: React.FC<TaskItemProps> = ({
               <Text
                 style={[
                   styles.dueDate,
-                  { color: colors.textSecondary },
-                  isOverdue && { color: colors.danger, fontWeight: '600' },
-                ]}
-              >
+                  {color: colors.textSecondary},
+                  isOverdue && {color: colors.danger, fontWeight: '600'},
+                ]}>
                 {moment(task.due_date).format('DD/MM/YYYY')}
               </Text>
             </View>
           )}
+        </View>
+        <View style={styles.tagContainer}>
+          {/* Category Badge */}
+          {task.category_id &&
+            categories.map(category => {
+              if (category.id === task.category_id) {
+                return (
+                  <View
+                    key={category.id}
+                    style={[
+                      styles.categoryBadge,
+                      {backgroundColor: category.color + '20'},
+                    ]}>
+                    <View
+                      style={[
+                        styles.categoryDot,
+                        {backgroundColor: category.color},
+                      ]}
+                    />
+                    <Text
+                      style={[styles.categoryText, {color: category.color}]}
+                      numberOfLines={1}>
+                      {category.name}
+                    </Text>
+                  </View>
+                );
+              }
+              return null;
+            })}
         </View>
       </View>
     </TouchableOpacity>
@@ -284,6 +279,12 @@ const styles = StyleSheet.create({
     fontSize: fonts.sizes.sm,
     lineHeight: 20,
   },
+  tagContainer: {
+    marginTop: spacing.sm,
+    flexDirection: 'row' as const,
+    flexWrap: 'wrap' as const,
+    gap: spacing.sm,
+  },
   deleteButton: {
     padding: spacing.xs,
   },
@@ -321,7 +322,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.full,
-    marginLeft: spacing.sm,
+
   },
   categoryDot: {
     width: 8,

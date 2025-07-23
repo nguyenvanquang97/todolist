@@ -131,15 +131,21 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
         ]);
       } else {
         // Add new task
-        await addTask({
+        const newTaskId = await addTask({
           ...taskData,
           status: 'pending',
           createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
           updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
         } as Task);
         
-        // Không thể thêm tag vào task mới ở đây vì addTask không trả về task ID
-        // Cần cải thiện logic này trong tương lai
+        // Thêm tags cho task mới nếu có newTaskId và selectedTags
+        if (newTaskId && selectedTags.length > 0) {
+          for (const tag of selectedTags) {
+            if (tag.id !== undefined) {
+              await addTagToTask(newTaskId, tag.id);
+            }
+          }
+        }
         
         Alert.alert(t('common.success'), t('addEditTask.addSuccess'), [
           { text: t('common.ok'), onPress: () => navigation.goBack() },

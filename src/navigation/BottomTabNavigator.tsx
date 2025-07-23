@@ -49,7 +49,7 @@ const BottomTabNavigator: React.FC = () => {
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textSecondary,
         tabBarStyle: {
-          backgroundColor: colors.card,
+          backgroundColor: colors.navigationBar,
           borderTopColor: colors.border,
         },
         headerShown: false,

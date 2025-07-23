@@ -49,7 +49,7 @@ export interface TaskContextType {
   loading: boolean;
   error: string | null;
   loadTasks: () => Promise<void>;
-  addTask: (task: Omit<Task, 'id' | 'created_at'>) => Promise<void>;
+  addTask: (task: Omit<Task, 'id' | 'created_at'>) => Promise<number | null>;
   updateTask: (id: number, task: Partial<Task>) => Promise<void>;
   deleteTask: (id: number) => Promise<void>;
   searchTasks: (query: string) => Promise<void>;

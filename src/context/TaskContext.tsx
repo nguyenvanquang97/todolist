@@ -208,11 +208,16 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
         if (task.due_date) {
           await notificationService.scheduleNotification(newTask);
         }
+        
+        dispatch({ type: 'SET_LOADING', payload: false });
+        return result.insertId; // Trả về ID của task vừa tạo
       }
       dispatch({ type: 'SET_LOADING', payload: false });
+      return null;
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: 'Failed to add task' });
       console.error('Add task error:', error);
+      return null;
     }
   };
 
@@ -331,13 +336,13 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
     }
   };
 
-  const updateTaskCategory = async (taskId: number, categoryId: number | undefined) => {
+  const updateTaskCategory = async (taskId: number, categoryId: number | null) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       await dbHelper.updateTaskCategory(taskId, categoryId);
       dispatch({
         type: 'UPDATE_TASK',
-        payload: { id: taskId, task: { category_id: categoryId } },
+        payload: { id: taskId, task: { category_id: categoryId === null ? undefined : categoryId } },
       });
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: 'Failed to update task category' });
