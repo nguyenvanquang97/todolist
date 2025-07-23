@@ -1733,7 +1733,7 @@ PODS:
     - React-utils (= 0.79.1)
   - RNCPushNotificationIOS (1.11.0):
     - React-Core
-  - RNDateTimePicker (8.4.2):
+  - RNDateTimePicker (8.0.0):
     - DoubleConversion
     - glog
     - hermes-engine
@@ -2182,7 +2182,7 @@ SPEC CHECKSUMS:
   ReactCodegen: 86758c0e13c6b245ff0cd7123cc5e8910d67546a
   ReactCommon: aa48e4fddbc6a0afa19dca39a1b6016c150b5db4
   RNCPushNotificationIOS: 6c4ca3388c7434e4a662b92e4dfeeee858e6f440
-  RNDateTimePicker: 76170c3e1545fa4abe11253758f76ed401541012
+  RNDateTimePicker: 6a67c67bf90299023379cf0ae109f6457d783f7f
   RNGestureHandler: 9205e0a9649ef6fcfd71e86992ecfb21eefab3d3
   RNNotifee: 5e3b271e8ea7456a36eec994085543c9adca9168
   RNScreens: 7e56b051227a1a11c3068849d1a9a5dd457537df

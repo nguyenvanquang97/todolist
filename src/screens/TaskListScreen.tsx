@@ -106,10 +106,15 @@ const TaskListScreen: React.FC<Props> = ({ navigation }) => {
     const newFilter = { ...currentFilter, searchQuery: query };
     setCurrentFilter(newFilter);
 
-    if (query.trim()) {
-      await searchTasks(query);
-    } else {
-      await applyCurrentFilter(newFilter);
+    try {
+      if (query.trim()) {
+        await searchTasks(query);
+      } else {
+        await applyCurrentFilter(newFilter);
+      }
+    } catch (error) {
+      console.error('Search error:', error);
+      // Không làm gì khi có lỗi để giữ nguyên trạng thái hiện tại
     }
   }, [currentFilter, searchTasks, applyCurrentFilter]);
 
