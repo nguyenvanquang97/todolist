@@ -1,10 +1,11 @@
 import React, {useState} from 'react';
-import {View, Text, Modal, TouchableOpacity, StyleSheet} from 'react-native';
+import {View, Text, Modal, TouchableOpacity, StyleSheet, ScrollView} from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {TaskFilter} from '../types/Task';
 import {spacing, borderRadius, fonts} from '@styles/theme';
 import {globalStyles} from '@styles/globalStyles';
 import {useTheme} from '@context/ThemeContext';
+import {useTaskContext} from '@context/TaskContext';
 import Button from '@components/Button';
 import {useTranslation} from '@i18n/i18n';
 
@@ -88,6 +89,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
 }) => {
   const {colors} = useTheme();
   const {t} = useTranslation();
+  const {categories} = useTaskContext();
   const [tempFilter, setTempFilter] = useState<TaskFilter>(currentFilter);
   const styles = createStyles(colors);
 
@@ -114,6 +116,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
       status: 'all',
       priority: 'all',
       searchQuery: '',
+      category_id: 'all',
     };
     setTempFilter(resetFilter);
     onApplyFilter(resetFilter);
@@ -171,7 +174,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
               </TouchableOpacity>
             </View>
 
-            <View style={styles.content}>
+            <ScrollView style={styles.content}>
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>{t('taskList.filterStatus')}</Text>
                 <View style={styles.optionsContainer}>
@@ -195,7 +198,97 @@ const FilterModal: React.FC<FilterModalProps> = ({
                   )}
                 </View>
               </View>
-            </View>
+              
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>{t('taskList.filterCategory')}</Text>
+                <View style={styles.optionsContainer}>
+                  {/* Tùy chọn 'Tất cả' cho danh mục */}
+                  <TouchableOpacity
+                    key="all"
+                    style={[
+                      styles.optionButton,
+                      tempFilter.category_id === 'all' && styles.selectedOption,
+                    ]}
+                    onPress={() => setTempFilter({
+                      ...tempFilter,
+                      category_id: 'all',
+                    })}
+                    activeOpacity={0.7}>
+                    <Text
+                      style={[
+                        styles.optionText,
+                        tempFilter.category_id === 'all' && styles.selectedOptionText,
+                      ]}>
+                      {t('common.all')}
+                    </Text>
+                    {tempFilter.category_id === 'all' && (
+                      <Icon name="checkmark" size={20} color={colors.primary} />
+                    )}
+                  </TouchableOpacity>
+                  
+                  {/* Tùy chọn 'Không có danh mục' */}
+                  <TouchableOpacity
+                    key="none"
+                    style={[
+                      styles.optionButton,
+                      tempFilter.category_id === 'none' && styles.selectedOption,
+                    ]}
+                    onPress={() => setTempFilter({
+                      ...tempFilter,
+                      category_id: 'none',
+                    })}
+                    activeOpacity={0.7}>
+                    <Text
+                      style={[
+                        styles.optionText,
+                        tempFilter.category_id === 'none' && styles.selectedOptionText,
+                      ]}>
+                      {t('taskDetail.noCategory')}
+                    </Text>
+                    {tempFilter.category_id === 'none' && (
+                      <Icon name="checkmark" size={20} color={colors.primary} />
+                    )}
+                  </TouchableOpacity>
+                  
+                  {/* Danh sách các danh mục */}
+                  {categories.map(category => (
+                    <TouchableOpacity
+                      key={category.id}
+                      style={[
+                        styles.optionButton,
+                        tempFilter.category_id === category.id.toString() && styles.selectedOption,
+                      ]}
+                      onPress={() => setTempFilter({
+                        ...tempFilter,
+                        category_id: category.id.toString(),
+                      })}
+                      activeOpacity={0.7}>
+                      <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                        <View 
+                          style={{
+                            width: 12, 
+                            height: 12, 
+                            borderRadius: 6, 
+                            backgroundColor: category.color,
+                            marginRight: spacing.sm
+                          }} 
+                        />
+                        <Text
+                          style={[
+                            styles.optionText,
+                            tempFilter.category_id === category.id.toString() && styles.selectedOptionText,
+                          ]}>
+                          {category.name}
+                        </Text>
+                      </View>
+                      {tempFilter.category_id === category.id.toString() && (
+                        <Icon name="checkmark" size={20} color={colors.primary} />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            </ScrollView>
 
             <View style={styles.buttonContainer}>
               <Button

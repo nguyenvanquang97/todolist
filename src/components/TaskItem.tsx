@@ -12,6 +12,7 @@ import { Task } from '../types/Task';
 import { spacing, borderRadius, fonts, baseColors } from '@styles/theme';
 import { useTheme } from '@context/ThemeContext';
 import { useTranslation } from '@i18n/i18n';
+import { useTaskContext } from '@context/TaskContext';
 
 export interface TaskItemProps {
   task: Task;
@@ -28,6 +29,7 @@ const TaskItem: React.FC<TaskItemProps> = ({
 }) => {
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const { categories } = useTaskContext();
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
@@ -188,6 +190,33 @@ const TaskItem: React.FC<TaskItemProps> = ({
                 {task.status === 'completed' ? t('status.completed') : t('status.pending')}
               </Text>
             </View>
+            
+            {/* Category Badge */}
+            {task.category_id && categories.map(category => {
+              if (category.id === task.category_id) {
+                return (
+                  <View
+                    key={category.id}
+                    style={[
+                      styles.categoryBadge,
+                      { backgroundColor: category.color + '20' },
+                    ]}
+                  >
+                    <View style={[styles.categoryDot, { backgroundColor: category.color }]} />
+                    <Text
+                      style={[
+                        styles.categoryText,
+                        { color: category.color },
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {category.name}
+                    </Text>
+                  </View>
+                );
+              }
+              return null;
+            })}
           </View>
 
           {task.due_date && (
@@ -285,6 +314,25 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: fonts.sizes.xs,
     fontWeight: '600' as const,
+  },
+  categoryBadge: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+    marginLeft: spacing.sm,
+  },
+  categoryDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: spacing.xs,
+  },
+  categoryText: {
+    fontSize: fonts.sizes.xs,
+    fontWeight: '600' as const,
+    maxWidth: 80,
   },
   dueDateContainer: {
     flexDirection: 'row' as const,

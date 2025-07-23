@@ -1,5 +1,5 @@
 import SQLite from 'react-native-sqlite-storage';
-import { Task, TaskFilter, DatabaseResult, AppSettings } from '../types/Task';
+import { Task, TaskFilter, DatabaseResult, AppSettings, Category, Tag, TaskTag } from '../types/Task';
 import SQLiteModule from 'react-native-sqlite-storage';
 
 // Enable promise for SQLite
@@ -44,7 +44,8 @@ class DatabaseHelper {
         due_date TEXT,
         priority TEXT,
         status TEXT,
-        created_at TEXT
+        created_at TEXT,
+        category_id INTEGER
       );
     `;
 
@@ -58,9 +59,41 @@ class DatabaseHelper {
       );
     `;
 
+    const createCategoriesTableQuery = `
+      CREATE TABLE IF NOT EXISTS categories (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        color TEXT NOT NULL,
+        icon TEXT,
+        created_at TEXT NOT NULL
+      );
+    `;
+
+    const createTagsTableQuery = `
+      CREATE TABLE IF NOT EXISTS tags (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        color TEXT NOT NULL,
+        usage_count INTEGER DEFAULT 0
+      );
+    `;
+
+    const createTaskTagsTableQuery = `
+      CREATE TABLE IF NOT EXISTS task_tags (
+        task_id INTEGER,
+        tag_id INTEGER,
+        PRIMARY KEY (task_id, tag_id),
+        FOREIGN KEY (task_id) REFERENCES tasks (id) ON DELETE CASCADE,
+        FOREIGN KEY (tag_id) REFERENCES tags (id) ON DELETE CASCADE
+      );
+    `;
+
     try {
       await this.database?.executeSql(createTasksTableQuery);
       await this.database?.executeSql(createSettingsTableQuery);
+      await this.database?.executeSql(createCategoriesTableQuery);
+      await this.database?.executeSql(createTagsTableQuery);
+      await this.database?.executeSql(createTaskTagsTableQuery);
       console.log('Database tables created successfully');
 
       // Initialize settings if not exists
@@ -241,6 +274,18 @@ class DatabaseHelper {
       values.push(searchPattern, searchPattern);
     }
 
+    // Lọc theo danh mục
+    if (filter.category_id) {
+      if (filter.category_id === 'none') {
+        // Lọc các task không có danh mục
+        query += ' AND (category_id IS NULL OR category_id = 0)';
+      } else if (filter.category_id !== 'all') {
+        // Lọc theo danh mục cụ thể
+        query += ' AND category_id = ?';
+        values.push(filter.category_id);
+      }
+    }
+
     query += ' ORDER BY created_at DESC;';
 
     try {
@@ -315,6 +360,350 @@ class DatabaseHelper {
       };
     } catch (error) {
       console.error('Error updating settings:', error);
+      throw error;
+    }
+  }
+
+  // Category methods
+  public async insertCategory(category: Omit<Category, 'id' | 'created_at'>): Promise<DatabaseResult> {
+    const insertQuery = `
+      INSERT INTO categories (name, color, icon, created_at)
+      VALUES (?, ?, ?, ?);
+    `;
+
+    const createdAt = new Date().toISOString();
+    const values = [
+      category.name,
+      category.color,
+      category.icon || null,
+      createdAt,
+    ];
+
+    try {
+      const result = await this.database?.executeSql(insertQuery, values);
+      return {
+        insertId: result?.[0].insertId,
+        rowsAffected: result?.[0].rowsAffected || 0,
+      };
+    } catch (error) {
+      console.error('Error inserting category:', error);
+      throw error;
+    }
+  }
+
+  public async getAllCategories(): Promise<Category[]> {
+    const selectQuery = 'SELECT * FROM categories ORDER BY name ASC;';
+
+    try {
+      const result = await this.database?.executeSql(selectQuery);
+      const categories: Category[] = [];
+
+      if (result && result[0].rows.length > 0) {
+        for (let i = 0; i < result[0].rows.length; i++) {
+          categories.push(result[0].rows.item(i));
+        }
+      }
+
+      return categories;
+    } catch (error) {
+      console.error('Error getting all categories:', error);
+      throw error;
+    }
+  }
+
+  public async updateCategory(id: number, category: Partial<Category>): Promise<DatabaseResult> {
+    const updateFields: string[] = [];
+    const values: any[] = [];
+
+    Object.entries(category).forEach(([key, value]) => {
+      if (key !== 'id' && key !== 'created_at' && value !== undefined) {
+        updateFields.push(`${key} = ?`);
+        values.push(value);
+      }
+    });
+
+    if (updateFields.length === 0) {
+      throw new Error('No fields to update');
+    }
+
+    const updateQuery = `UPDATE categories SET ${updateFields.join(', ')} WHERE id = ?;`;
+    values.push(id);
+
+    try {
+      const result = await this.database?.executeSql(updateQuery, values);
+      return {
+        rowsAffected: result?.[0].rowsAffected || 0,
+      };
+    } catch (error) {
+      console.error('Error updating category:', error);
+      throw error;
+    }
+  }
+
+  public async deleteCategory(id: number): Promise<DatabaseResult> {
+    // First, update all tasks that use this category to have null category_id
+    const updateTasksQuery = 'UPDATE tasks SET category_id = NULL WHERE category_id = ?;';
+    
+    // Then delete the category
+    const deleteCategoryQuery = 'DELETE FROM categories WHERE id = ?;';
+
+    try {
+      // Start a transaction
+      await this.database?.executeSql('BEGIN TRANSACTION;');
+      
+      // Update tasks
+      await this.database?.executeSql(updateTasksQuery, [id]);
+      
+      // Delete category
+      const result = await this.database?.executeSql(deleteCategoryQuery, [id]);
+      
+      // Commit the transaction
+      await this.database?.executeSql('COMMIT;');
+      
+      return {
+        rowsAffected: result?.[0].rowsAffected || 0,
+      };
+    } catch (error) {
+      // Rollback in case of error
+      await this.database?.executeSql('ROLLBACK;');
+      console.error('Error deleting category:', error);
+      throw error;
+    }
+  }
+
+  public async getTasksByCategory(categoryId: number): Promise<Task[]> {
+    const selectQuery = 'SELECT * FROM tasks WHERE category_id = ? ORDER BY created_at DESC;';
+
+    try {
+      const result = await this.database?.executeSql(selectQuery, [categoryId]);
+      const tasks: Task[] = [];
+
+      if (result && result[0].rows.length > 0) {
+        for (let i = 0; i < result[0].rows.length; i++) {
+          tasks.push(result[0].rows.item(i));
+        }
+      }
+
+      return tasks;
+    } catch (error) {
+      console.error('Error getting tasks by category:', error);
+      throw error;
+    }
+  }
+
+  public async updateTaskCategory(taskId: number, categoryId: number | null): Promise<DatabaseResult> {
+    const updateQuery = 'UPDATE tasks SET category_id = ? WHERE id = ?;';
+
+    try {
+      const result = await this.database?.executeSql(updateQuery, [categoryId, taskId]);
+      return {
+        rowsAffected: result?.[0].rowsAffected || 0,
+      };
+    } catch (error) {
+      console.error('Error updating task category:', error);
+      throw error;
+    }
+  }
+
+  // Tag methods
+  public async insertTag(tag: Omit<Tag, 'id' | 'usage_count'>): Promise<DatabaseResult> {
+    const insertQuery = `
+      INSERT INTO tags (name, color, usage_count)
+      VALUES (?, ?, 0);
+    `;
+
+    const values = [
+      tag.name,
+      tag.color,
+    ];
+
+    try {
+      const result = await this.database?.executeSql(insertQuery, values);
+      return {
+        insertId: result?.[0].insertId,
+        rowsAffected: result?.[0].rowsAffected || 0,
+      };
+    } catch (error) {
+      console.error('Error inserting tag:', error);
+      throw error;
+    }
+  }
+
+  public async getAllTags(): Promise<Tag[]> {
+    const selectQuery = 'SELECT * FROM tags ORDER BY name ASC;';
+
+    try {
+      const result = await this.database?.executeSql(selectQuery);
+      const tags: Tag[] = [];
+
+      if (result && result[0].rows.length > 0) {
+        for (let i = 0; i < result[0].rows.length; i++) {
+          tags.push(result[0].rows.item(i));
+        }
+      }
+
+      return tags;
+    } catch (error) {
+      console.error('Error getting all tags:', error);
+      throw error;
+    }
+  }
+
+  public async updateTag(id: number, tag: Partial<Tag>): Promise<DatabaseResult> {
+    const updateFields: string[] = [];
+    const values: any[] = [];
+
+    Object.entries(tag).forEach(([key, value]) => {
+      if (key !== 'id' && key !== 'usage_count' && value !== undefined) {
+        updateFields.push(`${key} = ?`);
+        values.push(value);
+      }
+    });
+
+    if (updateFields.length === 0) {
+      throw new Error('No fields to update');
+    }
+
+    const updateQuery = `UPDATE tags SET ${updateFields.join(', ')} WHERE id = ?;`;
+    values.push(id);
+
+    try {
+      const result = await this.database?.executeSql(updateQuery, values);
+      return {
+        rowsAffected: result?.[0].rowsAffected || 0,
+      };
+    } catch (error) {
+      console.error('Error updating tag:', error);
+      throw error;
+    }
+  }
+
+  public async deleteTag(id: number): Promise<DatabaseResult> {
+    // Delete tag from task_tags table first (cascade should handle this, but just to be safe)
+    const deleteTaskTagsQuery = 'DELETE FROM task_tags WHERE tag_id = ?;';
+    
+    // Then delete the tag
+    const deleteTagQuery = 'DELETE FROM tags WHERE id = ?;';
+
+    try {
+      // Start a transaction
+      await this.database?.executeSql('BEGIN TRANSACTION;');
+      
+      // Delete from task_tags
+      await this.database?.executeSql(deleteTaskTagsQuery, [id]);
+      
+      // Delete tag
+      const result = await this.database?.executeSql(deleteTagQuery, [id]);
+      
+      // Commit the transaction
+      await this.database?.executeSql('COMMIT;');
+      
+      return {
+        rowsAffected: result?.[0].rowsAffected || 0,
+      };
+    } catch (error) {
+      // Rollback in case of error
+      await this.database?.executeSql('ROLLBACK;');
+      console.error('Error deleting tag:', error);
+      throw error;
+    }
+  }
+
+  public async getTagsForTask(taskId: number): Promise<Tag[]> {
+    const selectQuery = `
+      SELECT t.* FROM tags t
+      JOIN task_tags tt ON t.id = tt.tag_id
+      WHERE tt.task_id = ?
+      ORDER BY t.name ASC;
+    `;
+
+    try {
+      const result = await this.database?.executeSql(selectQuery, [taskId]);
+      const tags: Tag[] = [];
+
+      if (result && result[0].rows.length > 0) {
+        for (let i = 0; i < result[0].rows.length; i++) {
+          tags.push(result[0].rows.item(i));
+        }
+      }
+
+      return tags;
+    } catch (error) {
+      console.error('Error getting tags for task:', error);
+      throw error;
+    }
+  }
+
+  public async addTagToTask(taskId: number, tagId: number): Promise<DatabaseResult> {
+    // First check if the relationship already exists
+    const checkQuery = 'SELECT COUNT(*) as count FROM task_tags WHERE task_id = ? AND tag_id = ?;';
+    
+    try {
+      const checkResult = await this.database?.executeSql(checkQuery, [taskId, tagId]);
+      const count = checkResult?.[0].rows.item(0).count;
+      
+      if (count > 0) {
+        // Relationship already exists
+        return { rowsAffected: 0 };
+      }
+      
+      // Insert the relationship
+      const insertQuery = 'INSERT INTO task_tags (task_id, tag_id) VALUES (?, ?);';
+      const result = await this.database?.executeSql(insertQuery, [taskId, tagId]);
+      
+      // Increment the usage_count for the tag
+      await this.database?.executeSql('UPDATE tags SET usage_count = usage_count + 1 WHERE id = ?;', [tagId]);
+      
+      return {
+        rowsAffected: result?.[0].rowsAffected || 0,
+      };
+    } catch (error) {
+      console.error('Error adding tag to task:', error);
+      throw error;
+    }
+  }
+
+  public async removeTagFromTask(taskId: number, tagId: number): Promise<DatabaseResult> {
+    const deleteQuery = 'DELETE FROM task_tags WHERE task_id = ? AND tag_id = ?;';
+    
+    try {
+      const result = await this.database?.executeSql(deleteQuery, [taskId, tagId]);
+      
+      if (result?.[0].rowsAffected > 0) {
+        // Decrement the usage_count for the tag
+        await this.database?.executeSql('UPDATE tags SET usage_count = MAX(0, usage_count - 1) WHERE id = ?;', [tagId]);
+      }
+      
+      return {
+        rowsAffected: result?.[0].rowsAffected || 0,
+      };
+    } catch (error) {
+      console.error('Error removing tag from task:', error);
+      throw error;
+    }
+  }
+
+  public async getTasksByTag(tagId: number): Promise<Task[]> {
+    const selectQuery = `
+      SELECT t.* FROM tasks t
+      JOIN task_tags tt ON t.id = tt.task_id
+      WHERE tt.tag_id = ?
+      ORDER BY t.created_at DESC;
+    `;
+
+    try {
+      const result = await this.database?.executeSql(selectQuery, [tagId]);
+      const tasks: Task[] = [];
+
+      if (result && result[0].rows.length > 0) {
+        for (let i = 0; i < result[0].rows.length; i++) {
+          tasks.push(result[0].rows.item(i));
+        }
+      }
+
+      return tasks;
+    } catch (error) {
+      console.error('Error getting tasks by tag:', error);
       throw error;
     }
   }

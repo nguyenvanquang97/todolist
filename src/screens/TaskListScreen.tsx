@@ -9,9 +9,9 @@ import {
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { TaskStackParamList } from '@navigation/AppNavigator';
+import { RootStackParamList } from '@navigation/RootStackNavigator';
 import { useTaskContext } from '@context/TaskContext';
-import { Task, TaskFilter } from '../types/Task';
+import { Task, TaskFilter, Category } from '../types/Task';
 import MemoizedTaskItem from '@components/MemoizedTaskItem';
 import SearchBar from '@components/SearchBar';
 import FilterModal from '@components/FilterModal';
@@ -20,9 +20,9 @@ import { globalStyles } from '@styles/globalStyles';
 import { spacing, baseColors } from '@styles/theme';
 import { useTheme } from '@context/ThemeContext';
 import Button from '@/components/Button';
-import { useTranslation } from '@/i18n';
+import { useTranslation } from '@i18n/i18n';
 
-type TaskListScreenNavigationProp = StackNavigationProp<TaskStackParamList, 'TaskList'>;
+type TaskListScreenNavigationProp = StackNavigationProp<RootStackParamList, 'TaskList'>;
 
 interface Props {
   navigation: TaskListScreenNavigationProp;
@@ -49,6 +49,7 @@ const TaskListScreen: React.FC<Props> = ({ navigation }) => {
     status: 'all',
     priority: 'all',
     searchQuery: '',
+    category_id: 'all',
   });
   const [refreshing, setRefreshing] = useState(false);
 
@@ -159,16 +160,16 @@ const TaskListScreen: React.FC<Props> = ({ navigation }) => {
     <View style={[globalStyles.emptyContainer, { backgroundColor: colors.background }]}>
       <Icon name="clipboard-outline" size={64} color={colors.textDisabled} />
       <Text style={[globalStyles.emptyText, { color: colors.text }]}>
-        {currentFilter.searchQuery || currentFilter.status !== 'all' || currentFilter.priority !== 'all'
+        {currentFilter.searchQuery || currentFilter.status !== 'all' || currentFilter.priority !== 'all' || currentFilter.category_id !== 'all'
           ? t('taskList.noSearchResults')
           : t('taskList.emptyList')}
       </Text>
       <Text style={[globalStyles.emptySubtext, { color: colors.textSecondary }]}>
-        {currentFilter.searchQuery || currentFilter.status !== 'all' || currentFilter.priority !== 'all'
+        {currentFilter.searchQuery || currentFilter.status !== 'all' || currentFilter.priority !== 'all' || currentFilter.category_id !== 'all'
           ? t('taskList.changeFilterPrompt')
           : t('taskList.addTaskPrompt')}
       </Text>
-      {(!currentFilter.searchQuery && currentFilter.status === 'all' && currentFilter.priority === 'all') && (
+      {(!currentFilter.searchQuery && currentFilter.status === 'all' && currentFilter.priority === 'all' && currentFilter.category_id === 'all') && (
           <Button
             title={t('taskList.addFirstTask')}
             style={{ marginTop: spacing.lg }}

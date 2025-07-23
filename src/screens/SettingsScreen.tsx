@@ -16,6 +16,7 @@ import { useSettings } from '@context/SettingsContext';
 import { spacing, borderRadius, fonts, baseColors } from '@styles/theme';
 import ThemeToggle from '@components/ThemeToggle';
 import { useTranslation } from '@i18n/index';
+import { NavigationService } from '@navigation/index';
 
 const SettingsScreen: React.FC = () => {
   const { colors } = useTheme();
@@ -129,6 +130,22 @@ const SettingsScreen: React.FC = () => {
             thumbColor={baseColors.white}
           />
         </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{t('settings.organization')}</Text>
+        <TouchableOpacity
+          style={styles.settingItem}
+          onPress={() => NavigationService.navigate('CategoryTagManagement', undefined)}
+        >
+          <View style={styles.settingInfo}>
+            <Icon name="folder-outline" size={22} color={colors.text} />
+            <Text style={[styles.settingText, { color: colors.text }]}>
+              {t('settings.categories.tags')}
+            </Text>
+          </View>
+          <Icon name="chevron-forward" size={20} color={colors.textSecondary} />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.section}>

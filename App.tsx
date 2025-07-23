@@ -1,16 +1,16 @@
-import React, { useEffect } from 'react';
-import { StatusBar, Platform, PermissionsAndroid } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { TaskProvider } from './src/context/TaskContext';
-import { ThemeProvider, useTheme } from './src/context/ThemeContext';
-import { SettingsProvider } from './src/context/SettingsContext';
-import AppNavigator from './src/navigation/AppNavigator';
+import React, {useEffect} from 'react';
+import {StatusBar, Platform, PermissionsAndroid} from 'react-native';
+import {NavigationContainer} from '@react-navigation/native';
+import {TaskProvider} from './src/context/TaskContext';
+import {ThemeProvider, useTheme} from './src/context/ThemeContext';
+import {SettingsProvider} from './src/context/SettingsContext';
 import notifee from '@notifee/react-native';
+import {RootStackNavigator, navigationRef} from '@/navigation/index';
 
 // Component StatusBar tùy chỉnh theo theme
 const AppStatusBar: React.FC = () => {
-  const { isDarkMode, colors } = useTheme();
-  
+  const {isDarkMode, colors} = useTheme();
+
   return (
     <StatusBar
       barStyle={isDarkMode ? 'light-content' : 'dark-content'}
@@ -27,7 +27,7 @@ const App: React.FC = () => {
         // Kiểm tra phiên bản Android
         if (Platform.Version >= 33) {
           await PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+            PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
           );
         }
       } else if (Platform.OS === 'ios') {
@@ -44,8 +44,8 @@ const App: React.FC = () => {
       <ThemeProvider>
         <TaskProvider>
           <AppStatusBar />
-          <NavigationContainer>
-            <AppNavigator />
+          <NavigationContainer ref={navigationRef}>
+            <RootStackNavigator />
           </NavigationContainer>
         </TaskProvider>
       </ThemeProvider>

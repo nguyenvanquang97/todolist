@@ -13,15 +13,15 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import moment from 'moment';
-import { TaskStackParamList } from '@navigation/AppNavigator';
+import { RootStackParamList } from '@navigation/RootStackNavigator';
 import { useTaskContext } from '@context/TaskContext';
-import { Task } from '../types/Task';
+import { Task, Tag } from '../types/Task';
 import LoadingSpinner from '@components/LoadingSpinner';
 import { globalStyles } from '@styles/globalStyles';
 import { spacing, borderRadius, fonts } from '@styles/theme';
 import { useTheme } from '@context/ThemeContext';
 import { testNotification } from '@utils/notificationHelper';
-import { useTranslation } from '@/i18n';
+import { useTranslation } from '@i18n/i18n';
 
 // Define base colors for use in the component
 const baseColors = {
@@ -37,8 +37,8 @@ const baseColors = {
   },
 };
 
-type TaskDetailScreenNavigationProp = StackNavigationProp<TaskStackParamList, 'TaskDetail'>;
-type TaskDetailScreenRouteProp = RouteProp<TaskStackParamList, 'TaskDetail'>;
+type TaskDetailScreenNavigationProp = StackNavigationProp<RootStackParamList, 'TaskDetail'>;
+type TaskDetailScreenRouteProp = RouteProp<RootStackParamList, 'TaskDetail'>;
 
 interface Props {
   navigation: TaskDetailScreenNavigationProp;
@@ -47,9 +47,11 @@ interface Props {
 
 const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
   const { task: initialTask } = route.params;
-  const { updateTask, deleteTask, loading } = useTaskContext();
+  const { updateTask, deleteTask, loading, categories, getTagsForTask } = useTaskContext();
   const { colors } = useTheme();
   const [task, setTask] = useState<Task>(initialTask);
+  const [taskTags, setTaskTags] = useState<Tag[]>([]);
+  const [loadingTags, setLoadingTags] = useState(false);
   const styles = createStyles(colors);
 
   const handleEdit = useCallback(() => {
@@ -75,8 +77,10 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await deleteTask(task.id!);
-              navigation.goBack();
+              if (task.id !== undefined) {
+                await deleteTask(task.id);
+                navigation.goBack();
+              }
             } catch (error) {
               Alert.alert(t('common.error'), t('taskDetail.deleteError'));
             }
@@ -86,6 +90,7 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
     );
   }, [deleteTask, navigation, task, t]);
 
+  // Cấu hình header buttons
   useEffect(() => {
     navigation.setOptions({
       headerRight: () => (
@@ -110,12 +115,33 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
       ),
     });
   }, [navigation, handleEdit, handleDelete]);
+  
+  // Load tags for the task - tách thành useEffect riêng
+  useEffect(() => {
+    const loadTags = async () => {
+      setLoadingTags(true);
+      try {
+        if (task.id !== undefined) {
+          const tags = await getTagsForTask(task.id);
+          setTaskTags(tags);
+        }
+      } catch (error) {
+        console.error('Failed to load tags for task', error);
+      } finally {
+        setLoadingTags(false);
+      }
+    };
+    
+    loadTags();
+  }, [task.id]); // Loại bỏ getTagsForTask khỏi dependencies để tránh vòng lặp vô hạn
 
   const handleToggleStatus = async () => {
     try {
-      const newStatus = task.status === 'completed' ? 'pending' : 'completed';
-      await updateTask(task.id!, { status: newStatus });
-      setTask({ ...task, status: newStatus });
+      if (task.id !== undefined) {
+        const newStatus = task.status === 'completed' ? 'pending' : 'completed';
+        await updateTask(task.id, { status: newStatus });
+        setTask({ ...task, status: newStatus });
+      }
     } catch (error) {
       Alert.alert(t('common.error'), t('taskDetail.updateStatusError'));
     }
@@ -129,7 +155,7 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
       } else {
         Alert.alert(t('common.notification'), t('taskDetail.notificationSent'));
       }
-    } catch (error) {
+    } catch (error: unknown) {
       Alert.alert(t('common.error'), t('taskDetail.notificationError'));
     }
   };
@@ -193,6 +219,45 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{t('taskDetail.description')}</Text>
             <Text style={styles.description}>{task.description}</Text>
+          </View>
+        )}
+        
+        {/* Category */}
+        {task.category_id && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{t('taskDetail.category')}</Text>
+            {categories.map(category => {
+              if (category.id === task.category_id) {
+                return (
+                  <View key={category.id} style={[styles.categoryContainer, { backgroundColor: category.color + '20' }]}>
+                    <View style={[styles.categoryDot, { backgroundColor: category.color }]} />
+                    <Text style={[styles.categoryText, { color: category.color }]}>
+                      {category.name}
+                    </Text>
+                    {category.icon && (
+                      <Icon name={category.icon} size={16} color={category.color} style={styles.categoryIcon} />
+                    )}
+                  </View>
+                );
+              }
+              return null;
+            })}
+          </View>
+        )}
+        
+        {/* Tags */}
+        {taskTags.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{t('taskDetail.tags')}</Text>
+            <View style={styles.tagsContainer}>
+              {taskTags.map(tag => (
+                <View key={tag.id} style={[styles.tagContainer, { backgroundColor: tag.color + '20' }]}>
+                  <Text style={[styles.tagText, { color: tag.color }]}>
+                    {tag.name}
+                  </Text>
+                </View>
+              ))}
+            </View>
           </View>
         )}
 
@@ -362,6 +427,44 @@ const createStyles = (colors: any) => StyleSheet.create({
   timestampValue: {
     fontSize: fonts.sizes.sm,
     color: colors.text,
+    fontWeight: '500',
+  },
+  // Category styles
+  categoryContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.md,
+    alignSelf: 'flex-start',
+  },
+  categoryDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: spacing.xs,
+  },
+  categoryText: {
+    fontSize: fonts.sizes.md,
+    fontWeight: '500',
+  },
+  categoryIcon: {
+    marginLeft: spacing.xs,
+  },
+  // Tags styles
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.xs,
+  },
+  tagContainer: {
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+    borderRadius: borderRadius.full,
+    marginBottom: spacing.xs,
+  },
+  tagText: {
+    fontSize: fonts.sizes.sm,
     fontWeight: '500',
   },
 });

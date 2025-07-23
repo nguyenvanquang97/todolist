@@ -14,7 +14,8 @@ const MemoizedTaskItem = memo(
       prevProps.task.description === nextProps.task.description &&
       prevProps.task.status === nextProps.task.status &&
       prevProps.task.priority === nextProps.task.priority &&
-      prevProps.task.due_date === nextProps.task.due_date
+      prevProps.task.due_date === nextProps.task.due_date &&
+      prevProps.task.category_id === nextProps.task.category_id
     );
   }
 );
