@@ -46,6 +46,8 @@ const SubtaskList: React.FC<SubtaskListProps> = ({ parentTaskId, subtasks: initi
       setLoading(false);
     }
   };
+  
+  // Chỉ gọi loadSubtasks khi component mount hoặc khi parentTaskId/initialSubtasks thay đổi
 
   useEffect(() => {
     if (initialSubtasks) {
@@ -71,10 +73,8 @@ const SubtaskList: React.FC<SubtaskListProps> = ({ parentTaskId, subtasks: initi
       updateTaskCompletion(parentTaskId, progress);
     }
     
-    // Notify parent component if callback is provided
-    if (onSubtasksChanged) {
-      onSubtasksChanged(tasks);
-    }
+    // Không gọi onSubtasksChanged ở đây để tránh vòng lặp vô hạn
+    // onSubtasksChanged được gọi trực tiếp trong các hàm xử lý thay đổi subtask
   };
 
   const handleAddSubtask = async () => {
@@ -92,10 +92,27 @@ const SubtaskList: React.FC<SubtaskListProps> = ({ parentTaskId, subtasks: initi
     };
 
     try {
-      await addTask(newSubtask);
+      const newTaskId = await addTask(newSubtask);
       setNewSubtaskTitle('');
       setIsAddingSubtask(false);
-      loadSubtasks();
+      
+      // Cập nhật trực tiếp state thay vì gọi loadSubtasks để tránh vòng lặp vô hạn
+      if (newTaskId) {
+        const newTask: Task = {
+          ...newSubtask,
+          id: newTaskId,
+          created_at: new Date().toISOString()
+        };
+        
+        const updatedSubtasks = [...subtasks, newTask];
+        setSubtasks(updatedSubtasks);
+        calculateOverallProgress(updatedSubtasks);
+        
+        // Thông báo cho component cha nếu callback được cung cấp
+        if (onSubtasksChanged) {
+          onSubtasksChanged(updatedSubtasks);
+        }
+      }
     } catch (error) {
       console.error('Error adding subtask:', error);
       Alert.alert(t('common.error'), t('addEditTask.addError'));
@@ -112,7 +129,25 @@ const SubtaskList: React.FC<SubtaskListProps> = ({ parentTaskId, subtasks: initi
         completion_percentage: completionPercentage,
       });
       
-      loadSubtasks();
+      // Cập nhật trực tiếp state thay vì gọi loadSubtasks để tránh vòng lặp vô hạn
+      const updatedSubtasks = subtasks.map(item => {
+        if (item.id === subtask.id) {
+          return {
+            ...item,
+            status: newStatus as 'pending' | 'completed',
+            completion_percentage: completionPercentage
+          } as Task;
+        }
+        return item;
+      });
+      
+      setSubtasks(updatedSubtasks);
+      calculateOverallProgress(updatedSubtasks);
+      
+      // Thông báo cho component cha nếu callback được cung cấp
+      if (onSubtasksChanged) {
+        onSubtasksChanged(updatedSubtasks);
+      }
     } catch (error) {
       console.error('Error updating subtask status:', error);
       Alert.alert(t('common.error'), t('addEditTask.updateError'));
@@ -131,7 +166,16 @@ const SubtaskList: React.FC<SubtaskListProps> = ({ parentTaskId, subtasks: initi
           onPress: async () => {
             try {
               await deleteTask(subtaskId);
-              loadSubtasks();
+              
+              // Cập nhật trực tiếp state thay vì gọi loadSubtasks để tránh vòng lặp vô hạn
+              const updatedSubtasks = subtasks.filter(task => task.id !== subtaskId);
+              setSubtasks(updatedSubtasks);
+              calculateOverallProgress(updatedSubtasks);
+              
+              // Thông báo cho component cha nếu callback được cung cấp
+              if (onSubtasksChanged) {
+                onSubtasksChanged(updatedSubtasks);
+              }
             } catch (error) {
               console.error('Error deleting subtask:', error);
               Alert.alert(t('common.error'), t('taskList.deleteError'));

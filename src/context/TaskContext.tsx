@@ -498,7 +498,7 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
 
   const updateTaskCompletion = useCallback(async (taskId: number, completionPercentage: number) => {
     try {
-      dispatch({ type: 'SET_LOADING', payload: true });
+      // Không set loading để tránh re-render liên tục
       await dbHelper.updateTaskCompletion(taskId, completionPercentage);
       dispatch({ 
         type: 'UPDATE_TASK_COMPLETION', 
@@ -508,16 +508,18 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
       // If this is a subtask, update the parent task's completion percentage
       const task = state.tasks.find(t => t.id === taskId);
       if (task && task.parent_task_id) {
-        await dbHelper.calculateParentCompletion(task.parent_task_id);
-        // Reload tasks to get updated parent completion percentage
-        const tasks = await dbHelper.getAllTasks();
-        dispatch({ type: 'SET_TASKS', payload: tasks });
+        const parentCompletion = await dbHelper.calculateParentCompletion(task.parent_task_id);
+        // Cập nhật giá trị vào database
+        await dbHelper.updateTaskCompletion(task.parent_task_id, parentCompletion);
+        // Chỉ cập nhật task cha cụ thể thay vì tải lại toàn bộ danh sách task
+        dispatch({ 
+          type: 'UPDATE_TASK_COMPLETION', 
+          payload: { id: task.parent_task_id, completionPercentage: parentCompletion } 
+        });
       }
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: 'Failed to update task completion' });
       console.error('Update task completion error:', error);
-    } finally {
-      dispatch({ type: 'SET_LOADING', payload: false });
     }
   }, [dbHelper, dispatch, state.tasks]);
 

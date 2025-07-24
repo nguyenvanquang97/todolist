@@ -22,7 +22,7 @@ import { useProjectContext } from '@context/ProjectContext';
 import { Task, Category, Tag, Project } from '../types/Task';
 import LoadingSpinner from '@components/LoadingSpinner';
 import Button from '@components/Button';
-import { globalStyles } from '@styles/globalStyles';
+import { useGlobalStyles } from '@styles/globalStyles';
 import { spacing, borderRadius, fonts } from '@styles/theme';
 import { useTheme } from '@context/ThemeContext';
 import { useTranslation } from '@i18n/i18n';
@@ -50,6 +50,7 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
   const { updateTaskProject } = useProjectContext();
 const { colors } = useTheme();
 const { t } = useTranslation();
+const globalStyles = useGlobalStyles();
   const { addTagToTask, removeTagFromTask } = useTaskContext();
   const [title, setTitle] = useState(task?.title || '');
   const [description, setDescription] = useState(task?.description || '');

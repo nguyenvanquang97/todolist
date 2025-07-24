@@ -3,7 +3,7 @@ import {View, Text, Modal, TouchableOpacity, StyleSheet, ScrollView} from 'react
 import Icon from 'react-native-vector-icons/Ionicons';
 import {TaskFilter} from '../types/Task';
 import {spacing, borderRadius, fonts} from '@styles/theme';
-import {globalStyles} from '@styles/globalStyles';
+import {useGlobalStyles} from '@styles/globalStyles';
 import {useTheme} from '@context/ThemeContext';
 import {useTaskContext} from '@context/TaskContext';
 import {useProjectContext} from '@context/ProjectContext';
@@ -95,6 +95,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
   const {projects} = useProjectContext();
   const [tempFilter, setTempFilter] = useState<TaskFilter>(currentFilter);
   const styles = createStyles(colors);
+  const globalStyles = useGlobalStyles();
 
   const statusOptions = [
     {value: 'all', label: t('common.all')},

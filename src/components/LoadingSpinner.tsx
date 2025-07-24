@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, ActivityIndicator, Text } from 'react-native';
-import { globalStyles } from '@styles/globalStyles';
+import { useGlobalStyles } from '@styles/globalStyles';
 import { useTheme } from '@context/ThemeContext';
 import { useTranslation } from '@i18n/i18n';
 
@@ -17,6 +17,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
 }) => {
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const globalStyles = useGlobalStyles();
   const loadingText = text || t('settings.loading');
   const spinnerColor = color || colors.primary;
   return (

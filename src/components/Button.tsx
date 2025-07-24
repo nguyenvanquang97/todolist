@@ -3,7 +3,7 @@ import { TouchableOpacity, Text, StyleSheet, ViewStyle, TextStyle, ActivityIndic
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '@context/ThemeContext';
 import { spacing, baseColors } from '@styles/theme';
-import { createGlobalStyles } from '@styles/globalStyles';
+import { useGlobalStyles } from '@styles/globalStyles';
 
 interface ButtonProps {
   title?: string;
@@ -33,7 +33,7 @@ const Button: React.FC<ButtonProps> = ({
   textStyle,
 }) => {
   const { colors } = useTheme();
-  const globalStyles = createGlobalStyles(colors);
+  const globalStyles = useGlobalStyles();
 
   // Xác định style dựa trên variant
   const getButtonStyle = () => {

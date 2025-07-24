@@ -19,7 +19,7 @@ import { useTaskContext } from '@context/TaskContext';
 import { useProjectContext } from '@context/ProjectContext';
 import { Task, Tag } from '../types/Task';
 import LoadingSpinner from '@components/LoadingSpinner';
-import { globalStyles } from '@styles/globalStyles';
+import { useGlobalStyles } from '@styles/globalStyles';
 import { spacing, borderRadius, fonts } from '@styles/theme';
 import { useTheme } from '@context/ThemeContext';
 import { testNotification } from '@utils/notificationHelper';
@@ -83,8 +83,9 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
   const [parentTask, setParentTask] = useState<Task | null>(null);
   const [project, setProject] = useState<any | null>(null);
   const styles = createStyles(colors);
+  const globalStyles = useGlobalStyles();
 
-  console.log("taskTags", taskTags);
+
 
   const handleEdit = useCallback(() => {
     navigation.navigate('AddEditTask', {
@@ -145,7 +146,7 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
       ),
     });
   }, [navigation, handleEdit, handleDelete]);
-  
+
   // Load tags for the task - tách thành useEffect riêng
   useEffect(() => {
     const loadTags = async () => {
@@ -253,7 +254,7 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
   const isOverdue = task.due_date && moment(task.due_date).isBefore(moment()) && task.status === 'pending';
   const priorityInfo = getPriorityInfo(task.priority);
   const statusInfo = getStatusInfo(task.status);
-
+  
   if (loading) {
     return <LoadingSpinner text={t('common.updating')} />;
   }
@@ -433,16 +434,10 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
             subtasks={subtasks} 
             parentTaskId={task.id}
             onSubtasksChanged={(updatedSubtasks) => {
+              // Chỉ cập nhật state subtasks mà không gọi updateTaskCompletion
+              // vì updateTaskCompletion đã được gọi trong calculateOverallProgress của SubtaskList
               setSubtasks(updatedSubtasks);
-              // Refresh the parent task to get updated completion percentage
-              if (task.id !== undefined) {
-                updateTaskCompletion(task.id, task.completion_percentage || 0);
-                // Update local task state with new completion percentage
-                const updatedTask = { ...task };
-                setTask(updatedTask);
-              }
             }}
-            
           />
         </View>
 

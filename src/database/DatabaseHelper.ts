@@ -976,8 +976,8 @@ class DatabaseHelper {
     
     const averageCompletion = Math.round(totalCompletion / subtasks.length);
     
-    // Update the parent task's completion percentage
-    await this.updateTaskCompletion(parentTaskId, averageCompletion);
+    // Chỉ tính toán giá trị mà không cập nhật trực tiếp vào database
+    // Việc cập nhật sẽ được thực hiện bởi TaskContext.updateTaskCompletion
     
     return averageCompletion;
   }

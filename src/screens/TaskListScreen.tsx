@@ -18,7 +18,7 @@ import MemoizedTaskItem from '@components/MemoizedTaskItem';
 import SearchBar from '@components/SearchBar';
 import FilterModal from '@components/FilterModal';
 import LoadingSpinner from '@components/LoadingSpinner';
-import { globalStyles } from '@styles/globalStyles';
+import { useGlobalStyles } from '@styles/globalStyles';
 import { spacing, baseColors } from '@styles/theme';
 import { useTheme } from '@context/ThemeContext';
 import Button from '@/components/Button';
@@ -46,6 +46,7 @@ const TaskListScreen: React.FC = () => {
 
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const globalStyles = useGlobalStyles();
 
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [currentFilter, setCurrentFilter] = useState<TaskFilter>({

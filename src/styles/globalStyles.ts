@@ -1,10 +1,13 @@
 import { StyleSheet } from 'react-native';
 import { spacing, borderRadius, fonts } from './theme';
+import { useTheme } from '@context/ThemeContext';
+import { useMemo } from 'react';
+import { DEVICE_HEIGHT, DEVICE_WIDTH } from '@/utils/constants';
 
 // Lưu ý: Chúng ta không import colors trực tiếp nữa
 // Thay vào đó, chúng ta sẽ sử dụng colors từ ThemeContext
 
-export const createGlobalStyles = (colors: any) => ({
+const createGlobalStyles = (colors: any) => ({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -321,10 +324,6 @@ export const createGlobalStyles = (colors: any) => ({
   },
 });
 
-// Tạo một hook để sử dụng globalStyles với theme hiện tại
-import { useTheme } from '../context/ThemeContext';
-import { useMemo } from 'react';
-
 export const useGlobalStyles = () => {
   const { colors } = useTheme();
 
@@ -332,8 +331,3 @@ export const useGlobalStyles = () => {
   return useMemo(() => StyleSheet.create(createGlobalStyles(colors)), [colors]);
 };
 
-// Xuất globalStyles cũ để tương thích với code hiện tại
-// Sẽ sử dụng lightTheme làm mặc định
-import { lightTheme } from './theme';
-import { DEVICE_HEIGHT, DEVICE_WIDTH } from '@/utils/constants';
-export const globalStyles = StyleSheet.create(createGlobalStyles(lightTheme));
