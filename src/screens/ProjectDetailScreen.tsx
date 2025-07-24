@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp, NavigationProp } from '@react-navigation/native';
 import { useProjectContext } from '@context/ProjectContext';
 import { useTaskContext } from '@context/TaskContext';
 import { useTheme } from '@context/ThemeContext';
 import Button from '@components/Button';
 import LoadingSpinner from '@components/LoadingSpinner';
 import MemoizedTaskItem from '@components/MemoizedTaskItem';
-import { Project, Task } from '@types/Task';
+import { Project, Task } from '../types/Task';
 import { useTranslation } from 'react-i18next';
 
 type ProjectDetailScreenRouteProp = RouteProp<
@@ -18,7 +18,7 @@ type ProjectDetailScreenRouteProp = RouteProp<
 const ProjectDetailScreen: React.FC = () => {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp<any>>();
   const route = useRoute<ProjectDetailScreenRouteProp>();
   const { projectId } = route.params;
 
@@ -48,7 +48,8 @@ const ProjectDetailScreen: React.FC = () => {
 
   const handleEditProject = () => {
     if (project) {
-      navigation.navigate('ProjectManagement' as never);
+      // Sử dụng as any để tránh lỗi TypeScript
+      (navigation as any).navigate('ProjectManagement');
       // In a real implementation, you would navigate to edit mode with the project ID
       // navigation.navigate('EditProject', { projectId: project.id });
     }
@@ -76,12 +77,17 @@ const ProjectDetailScreen: React.FC = () => {
 
   const handleAddTaskToProject = () => {
     // Navigate to task list or create new task with pre-selected project
-    navigation.navigate('AddEditTask' as never, { projectId } as never);
+    (navigation as any).navigate('AddEditTask', { projectId });
   };
 
   const renderTaskItem = ({ item }: { item: Task }) => (
     <View style={styles.taskItemContainer}>
-      <MemoizedTaskItem task={item} />
+      <MemoizedTaskItem 
+        task={item} 
+        onPress={() => navigation.navigate('TaskDetail', { task: item })}
+        onToggleStatus={() => {}}
+        onDelete={() => {}}
+      />
       <TouchableOpacity
         style={styles.removeButton}
         onPress={() => handleRemoveTaskFromProject(item.id!)}
@@ -133,7 +139,7 @@ const ProjectDetailScreen: React.FC = () => {
         <Button
           title={t('edit_project')}
           onPress={handleEditProject}
-          type="secondary"
+          variant="secondary"
           style={styles.editButton}
         />
       </View>
@@ -144,7 +150,7 @@ const ProjectDetailScreen: React.FC = () => {
           <Button
             title={t('add_task')}
             onPress={handleAddTaskToProject}
-            type="primary"
+            variant="primary"
             style={styles.addTaskButton}
           />
         </View>

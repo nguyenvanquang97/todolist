@@ -6,6 +6,7 @@ import {Task} from '../types/Task';
 import {spacing, borderRadius, fonts, baseColors} from '@styles/theme';
 import {useTheme} from '@context/ThemeContext';
 import {useTranslation} from '@i18n/i18n';
+import { NavigationProp } from '@react-navigation/native';
 import {useTaskContext} from '@context/TaskContext';
 import {useProjectContext} from '@context/ProjectContext';
 
@@ -296,7 +297,7 @@ const TaskItem: React.FC<TaskItemProps> = ({
               <Text
                 style={[styles.subtaskText, {color: colors.info}]}
                 numberOfLines={1}>
-                {t('taskItem.hasSubtasks', {count: subtasks.length})}
+                {t('taskItem.hasSubtasks').replace('{{count}}', subtasks.length.toString())}
               </Text>
             </View>
           )}

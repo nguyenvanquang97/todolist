@@ -1,5 +1,5 @@
 import SQLite from 'react-native-sqlite-storage';
-import { Task, TaskFilter, DatabaseResult, AppSettings, Category, Tag, TaskTag } from '../types/Task';
+import { Task, TaskFilter, DatabaseResult, AppSettings, Category, Tag, TaskTag, Project } from '../types/Task';
 import SQLiteModule from 'react-native-sqlite-storage';
 
 // Enable promise for SQLite

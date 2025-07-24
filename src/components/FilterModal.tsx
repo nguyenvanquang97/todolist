@@ -9,6 +9,7 @@ import {useTaskContext} from '@context/TaskContext';
 import {useProjectContext} from '@context/ProjectContext';
 import Button from '@components/Button';
 import {useTranslation} from '@i18n/i18n';
+import { NavigationProp } from '@react-navigation/native';
 
 interface FilterModalProps {
   visible: boolean;
@@ -260,9 +261,9 @@ const FilterModal: React.FC<FilterModalProps> = ({
                       key={category.id}
                       style={[
                         styles.optionButton,
-                        tempFilter.category_id === category.id.toString() && styles.selectedOption,
+                        category.id && tempFilter.category_id === category.id.toString() ? styles.selectedOption : undefined,
                       ]}
-                      onPress={() => setTempFilter({
+                      onPress={() => category.id && setTempFilter({
                         ...tempFilter,
                         category_id: category.id.toString(),
                       })}
@@ -280,14 +281,14 @@ const FilterModal: React.FC<FilterModalProps> = ({
                         <Text
                           style={[
                             styles.optionText,
-                            tempFilter.category_id === category.id.toString() && styles.selectedOptionText,
+                            category.id && tempFilter.category_id === category.id.toString() ? styles.selectedOptionText : undefined,
                           ]}>
                           {category.name}
                         </Text>
                       </View>
-                      {tempFilter.category_id === category.id.toString() && (
+                      {category.id && tempFilter.category_id === category.id.toString() ? (
                         <Icon name="checkmark" size={20} color={colors.primary} />
-                      )}
+                      ) : null}
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -350,9 +351,9 @@ const FilterModal: React.FC<FilterModalProps> = ({
                       key={project.id}
                       style={[
                         styles.optionButton,
-                        tempFilter.project_id === project.id.toString() && styles.selectedOption,
+                        project.id && tempFilter.project_id === project.id.toString() ? styles.selectedOption : undefined,
                       ]}
-                      onPress={() => setTempFilter({
+                      onPress={() => project.id && setTempFilter({
                         ...tempFilter,
                         project_id: project.id.toString(),
                       })}
@@ -370,14 +371,14 @@ const FilterModal: React.FC<FilterModalProps> = ({
                         <Text
                           style={[
                             styles.optionText,
-                            tempFilter.project_id === project.id.toString() && styles.selectedOptionText,
+                            project.id && tempFilter.project_id === project.id.toString() ? styles.selectedOptionText : undefined,
                           ]}>
                           {project.name}
                         </Text>
                       </View>
-                      {tempFilter.project_id === project.id.toString() && (
+                      {project.id && tempFilter.project_id === project.id.toString() ? (
                         <Icon name="checkmark" size={20} color={colors.primary} />
-                      )}
+                      ) : null}
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -443,6 +444,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
 
               <Button
                 title={t('common.apply')}
+                variant="primary"
                 style={styles.button}
                 onPress={handleApply}
               />

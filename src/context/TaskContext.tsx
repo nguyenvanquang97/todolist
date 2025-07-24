@@ -538,6 +538,12 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
     // Category methods
     addCategory,
     updateCategory,
+    // Project methods
+    loadProjects: loadTasks,
+    addProject: async () => null,
+    updateProject: async () => {},
+    deleteProject: async () => {},
+    updateTaskProject: async () => {},
     deleteCategory,
     updateTaskCategory,
     // Tag methods

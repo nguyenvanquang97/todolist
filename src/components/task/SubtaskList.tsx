@@ -2,14 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, TextInput } from 'react-native';
 import { useTaskContext } from '@context/TaskContext';
 import { useTheme } from '@context/ThemeContext';
-import { Task } from '@types/Task';
+import type { Task } from '@/types/Task';
 import Button from '@components/Button';
-import ProgressBar from './ProgressBar';
+import ProgressBar from '@components/task/ProgressBar';
 import { useTranslation } from '@/i18n';
+import { NavigationProp, useNavigation } from '@react-navigation/native';
+import { RootStackParamList } from '@navigation/RootStackNavigator';
 
 
 interface SubtaskListProps {
-  parentTaskId: number;
+  parentTaskId?: number;
   subtasks?: Task[];
   onSubtasksChanged?: (updatedSubtasks: Task[]) => void;
 }
@@ -26,6 +28,8 @@ const SubtaskList: React.FC<SubtaskListProps> = ({ parentTaskId, subtasks: initi
   const [overallProgress, setOverallProgress] = useState(0);
 
   const loadSubtasks = async () => {
+    if (!parentTaskId) return;
+    
     setLoading(true);
     try {
       const tasks = await getSubtasks(parentTaskId);
@@ -63,7 +67,9 @@ const SubtaskList: React.FC<SubtaskListProps> = ({ parentTaskId, subtasks: initi
     setOverallProgress(progress);
 
     // Update parent task completion percentage
-    updateTaskCompletion(parentTaskId, progress);
+    if (parentTaskId) {
+      updateTaskCompletion(parentTaskId, progress);
+    }
     
     // Notify parent component if callback is provided
     if (onSubtasksChanged) {
@@ -72,8 +78,8 @@ const SubtaskList: React.FC<SubtaskListProps> = ({ parentTaskId, subtasks: initi
   };
 
   const handleAddSubtask = async () => {
-    if (!newSubtaskTitle.trim()) {
-      Alert.alert(t('error'), t('subtask_title_required'));
+    if (!newSubtaskTitle.trim() || !parentTaskId) {
+      Alert.alert(t('common.error'), t('addEditTask.errors.emptyTitle'));
       return;
     }
 
@@ -92,7 +98,7 @@ const SubtaskList: React.FC<SubtaskListProps> = ({ parentTaskId, subtasks: initi
       loadSubtasks();
     } catch (error) {
       console.error('Error adding subtask:', error);
-      Alert.alert(t('error'), t('failed_to_add_subtask'));
+      Alert.alert(t('common.error'), t('addEditTask.addError'));
     }
   };
 
@@ -109,18 +115,18 @@ const SubtaskList: React.FC<SubtaskListProps> = ({ parentTaskId, subtasks: initi
       loadSubtasks();
     } catch (error) {
       console.error('Error updating subtask status:', error);
-      Alert.alert(t('error'), t('failed_to_update_subtask'));
+      Alert.alert(t('common.error'), t('addEditTask.updateError'));
     }
   };
 
   const handleDeleteSubtask = (subtaskId: number) => {
     Alert.alert(
-      t('delete_subtask'),
-      t('delete_subtask_confirmation'),
+      t('taskDetail.deleteConfirmTitle'),
+      t('taskDetail.deleteConfirmMessage'),
       [
-        { text: t('cancel'), style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: t('delete'),
+          text: t('common.delete'),
           style: 'destructive',
           onPress: async () => {
             try {
@@ -128,7 +134,7 @@ const SubtaskList: React.FC<SubtaskListProps> = ({ parentTaskId, subtasks: initi
               loadSubtasks();
             } catch (error) {
               console.error('Error deleting subtask:', error);
-              Alert.alert(t('error'), t('failed_to_delete_subtask'));
+              Alert.alert(t('common.error'), t('taskList.deleteError'));
             }
           },
         },
@@ -181,17 +187,17 @@ const SubtaskList: React.FC<SubtaskListProps> = ({ parentTaskId, subtasks: initi
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]}>{t('subtasks')}</Text>
+        <Text style={[styles.title, { color: colors.text }]}>{t('taskDetail.subtasks')}</Text>
         <TouchableOpacity onPress={() => setIsAddingSubtask(!isAddingSubtask)}>
           <Text style={[styles.addButton, { color: colors.primary }]}>
-            {isAddingSubtask ? t('cancel') : t('add_subtask')}
+            {isAddingSubtask ? t('common.cancel') : t('taskDetail.addSubtask')}
           </Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.progressContainer}>
         <Text style={[styles.progressText, { color: colors.text }]}>
-          {t('progress')}: {Math.round(overallProgress)}%
+          {t('taskDetail.progress')}: {Math.round(overallProgress)}%
         </Text>
         <ProgressBar progress={overallProgress} />
       </View>
@@ -200,24 +206,24 @@ const SubtaskList: React.FC<SubtaskListProps> = ({ parentTaskId, subtasks: initi
         <View style={[styles.addSubtaskContainer, { backgroundColor: colors.card }]}>
           <TextInput
             style={[styles.input, { color: colors.text, borderColor: colors.border }]}
-            placeholder={t('enter_subtask_title')}
+            placeholder={t('addEditTask.titlePlaceholder')}
             placeholderTextColor={colors.text + '80'}
             value={newSubtaskTitle}
             onChangeText={setNewSubtaskTitle}
           />
           <Button
-            title={t('add')}
+            title={t('common.add')}
             onPress={handleAddSubtask}
-            type="primary"
+            variant="primary"
             style={styles.addSubtaskButton}
           />
         </View>
       )}
 
       {loading ? (
-        <Text style={[styles.loadingText, { color: colors.text }]}>{t('loading_subtasks')}</Text>
+        <Text style={[styles.loadingText, { color: colors.text }]}>{t('taskList.loading')}</Text>
       ) : subtasks.length === 0 ? (
-        <Text style={[styles.emptyText, { color: colors.text }]}>{t('no_subtasks')}</Text>
+        <Text style={[styles.emptyText, { color: colors.text }]}>{t('taskDetail.noSubtasks')}</Text>
       ) : (
         <View style={styles.subtasksList}>
           {subtasks.map(renderSubtask)}

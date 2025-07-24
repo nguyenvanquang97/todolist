@@ -8,6 +8,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { NavigationProp, useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { RootStackParamList } from '@navigation/RootStackNavigator';
 import { useTaskContext } from '@context/TaskContext';
@@ -23,13 +24,10 @@ import { useTheme } from '@context/ThemeContext';
 import Button from '@/components/Button';
 import { useTranslation } from '@i18n/i18n';
 
-type TaskListScreenNavigationProp = StackNavigationProp<RootStackParamList, 'TaskList'>;
+type TaskListScreenNavigationProp = NavigationProp<RootStackParamList, 'TaskList'>;
 
-interface Props {
-  navigation: TaskListScreenNavigationProp;
-}
-
-const TaskListScreen: React.FC<Props> = ({ navigation }) => {
+const TaskListScreen: React.FC = () => {
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const {
     tasks,
     loading,
@@ -72,13 +70,13 @@ const TaskListScreen: React.FC<Props> = ({ navigation }) => {
           </TouchableOpacity>
           <TouchableOpacity
             style={{ marginRight: 15 }}
-            onPress={() => navigation.navigate('ProjectManagement')}
+            onPress={() => navigation.navigate('ProjectManagement' as any)}
           >
             <Icon name="folder-outline" size={24} color={baseColors.white} />
           </TouchableOpacity>
           <TouchableOpacity
             style={{ marginRight: 15 }}
-            onPress={() => navigation.navigate('AddEditTask', { mode: 'add' })}
+            onPress={() => navigation.navigate('AddEditTask' as any, { mode: 'add' })}
           >
             <Icon name="add" size={24} color={baseColors.white} />
           </TouchableOpacity>
@@ -152,7 +150,7 @@ const TaskListScreen: React.FC<Props> = ({ navigation }) => {
   }, [deleteTask, t]);
 
   const handleTaskPress = useCallback((task: Task) => {
-    navigation.navigate('TaskDetail', { task });
+    navigation.navigate('TaskDetail' as any, { task });
   }, [navigation]);
 
   const handleApplyFilter = useCallback(async (filter: TaskFilter) => {
@@ -206,7 +204,7 @@ const TaskListScreen: React.FC<Props> = ({ navigation }) => {
           <Button
             title={t('taskList.addFirstTask')}
             style={{ marginTop: spacing.lg }}
-            onPress={() => navigation.navigate('AddEditTask', { mode: 'add' })}
+            onPress={() => navigation.navigate('AddEditTask' as any, { mode: 'add' })}
           />
         )}
     </View>

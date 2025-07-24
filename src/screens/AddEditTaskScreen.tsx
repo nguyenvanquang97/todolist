@@ -12,7 +12,7 @@ import {
   Switch,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RouteProp } from '@react-navigation/native';
+import { RouteProp, useNavigation, NavigationProp } from '@react-navigation/native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import Icon from 'react-native-vector-icons/Ionicons';
 import moment from 'moment';
@@ -34,7 +34,7 @@ const baseColors = {
   white: '#FFFFFF',
 };
 
-type AddEditTaskScreenNavigationProp = StackNavigationProp<RootStackParamList, 'AddEditTask'>;
+type AddEditTaskScreenNavigationProp = NavigationProp<RootStackParamList, 'AddEditTask'>;
 type AddEditTaskScreenRouteProp = RouteProp<RootStackParamList, 'AddEditTask'>;
 
 interface Props {
@@ -629,6 +629,7 @@ const [showParentTaskModal, setShowParentTaskModal] = useState(false);
           onPress={handleSave}
           disabled={!title.trim() || loading}
           loading={loading}
+          variant="primary"
         />
       </View>
 

@@ -17,6 +17,7 @@ import { spacing, borderRadius, fonts, baseColors } from '@styles/theme';
 import ThemeToggle from '@components/ThemeToggle';
 import { useTranslation } from '@i18n/index';
 import { NavigationService } from '@navigation/index';
+import { RootStackParamList } from '@navigation/RootStackNavigator';
 
 const SettingsScreen: React.FC = () => {
   const { colors } = useTheme();
@@ -136,7 +137,7 @@ const SettingsScreen: React.FC = () => {
         <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{t('settings.organization')}</Text>
         <TouchableOpacity
           style={styles.settingItem}
-          onPress={() => NavigationService.navigate('CategoryTagManagement', undefined)}
+          onPress={() => NavigationService.navigate('CategoryTagManagement' as keyof RootStackParamList, undefined)}
         >
           <View style={styles.settingInfo}>
             <Icon name="folder-outline" size={22} color={colors.text} />

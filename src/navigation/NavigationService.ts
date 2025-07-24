@@ -12,10 +12,7 @@ export function navigate<RouteName extends keyof RootStackParamList>(
 ) {
   if (navigationRef.current) {
     // Sửa lỗi TypeScript bằng cách truyền tham số đúng định dạng
-    navigationRef.current.navigate({
-      name: name,
-      params: params,
-    });
+    navigationRef.current.navigate(name as never, params as never);
   } else {
     console.error('Navigation reference is not set');
   }
@@ -29,10 +26,7 @@ export function replace<RouteName extends keyof RootStackParamList>(
   if (navigationRef.current) {
     // Sửa lỗi TypeScript bằng cách truyền tham số đúng định dạng
     navigationRef.current.dispatch(
-      StackActions.replace({
-        name: name,
-        params: params,
-      })
+      StackActions.replace(name as string, params)
     );
   } else {
     console.error('Navigation reference is not set');

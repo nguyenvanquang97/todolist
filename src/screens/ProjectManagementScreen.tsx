@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { useProjectContext } from '@context/ProjectContext';
 import { useTheme } from '@context/ThemeContext';
 import Button from '@components/Button';
 import LoadingSpinner from '@components/LoadingSpinner';
 import ColorPicker from '@components/ColorPicker';
-import { Project } from '@types/Task';
+import { Project } from '../types/Task';
 import { useTranslation } from 'react-i18next';
 
 const ProjectManagementScreen: React.FC = () => {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp<any>>();
   const { projects, loading, error, loadProjects, addProject, updateProject, deleteProject } = useProjectContext();
 
   const [isAddMode, setIsAddMode] = useState(false);
@@ -165,13 +165,13 @@ const ProjectManagementScreen: React.FC = () => {
             <Button
               title={t('cancel')}
               onPress={resetForm}
-              type="secondary"
+              variant="secondary"
               style={styles.button}
             />
             <Button
               title={isAddMode ? t('add') : t('update')}
               onPress={isAddMode ? handleAddProject : handleEditProject}
-              type="primary"
+              variant="primary"
               style={styles.button}
             />
           </View>
@@ -181,7 +181,7 @@ const ProjectManagementScreen: React.FC = () => {
           <Button
             title={t('add_project')}
             onPress={() => setIsAddMode(true)}
-            type="primary"
+            variant="primary"
             style={styles.addButton}
           />
           {projects.length === 0 ? (

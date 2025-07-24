@@ -1,8 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useTheme } from '@context/ThemeContext';
-import { Project } from '@types/Task';
+import { Project } from '../../types/Task';
 import { useTranslation } from 'react-i18next';
+import { NavigationProp } from '@react-navigation/native';
 import { format } from 'date-fns';
 
 interface ProjectItemProps {
@@ -46,7 +47,7 @@ const ProjectItem: React.FC<ProjectItemProps> = ({ project, onPress, onEdit, onD
     }
   };
 
-  const formatDate = (dateString: string | null) => {
+  const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return t('not_set');
     return format(new Date(dateString), 'MMM d, yyyy');
   };

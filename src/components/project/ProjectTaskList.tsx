@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
 import { useTaskContext } from '@context/TaskContext';
 import { useTheme } from '@context/ThemeContext';
-import { Task, Project } from '@types/Task';
+import { Task, Project } from '../../types/Task';
 import MemoizedTaskItem from '@components/MemoizedTaskItem';
 import { useTranslation } from 'react-i18next';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, NavigationProp } from '@react-navigation/native';
+import { RootStackParamList } from '@navigation/RootStackNavigator';
 
 interface ProjectTaskListProps {
   project: Project;
@@ -14,7 +15,7 @@ interface ProjectTaskListProps {
 const ProjectTaskList: React.FC<ProjectTaskListProps> = ({ project }) => {
   const { t } = useTranslation();
   const { colors } = useTheme();
-  const navigation = useNavigation();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const { tasks, updateTaskProject } = useTaskContext();
 
   const [projectTasks, setProjectTasks] = useState<Task[]>([]);
@@ -26,7 +27,7 @@ const ProjectTaskList: React.FC<ProjectTaskListProps> = ({ project }) => {
   }, [tasks, project.id]);
 
   const handleTaskPress = (task: Task) => {
-    navigation.navigate('TaskDetail', { taskId: task.id });
+    navigation.navigate('TaskDetail' as any, { taskId: task.id });
   };
 
   const handleRemoveTaskFromProject = (taskId: number) => {
@@ -56,7 +57,9 @@ const ProjectTaskList: React.FC<ProjectTaskListProps> = ({ project }) => {
     <View style={styles.taskItemContainer}>
       <MemoizedTaskItem 
         task={item} 
-        onPress={() => handleTaskPress(item)} 
+        onPress={() => handleTaskPress(item)}
+        onToggleStatus={() => {}}
+        onDelete={() => {}}
       />
       <TouchableOpacity 
         style={styles.removeButton}
@@ -76,7 +79,7 @@ const ProjectTaskList: React.FC<ProjectTaskListProps> = ({ project }) => {
       </Text>
       <TouchableOpacity 
         style={[styles.addTaskButton, { backgroundColor: colors.primary }]}
-        onPress={() => navigation.navigate('AddEditTask', { projectId: project.id })}
+        onPress={() => navigation.navigate('AddEditTask' as any, { projectId: project.id })}
       >
         <Text style={[styles.addTaskButtonText, { color: colors.white }]}>
           {t('add_task')}
@@ -90,7 +93,7 @@ const ProjectTaskList: React.FC<ProjectTaskListProps> = ({ project }) => {
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.text }]}>{t('tasks')}</Text>
         <TouchableOpacity 
-          onPress={() => navigation.navigate('AddEditTask', { projectId: project.id })}
+          onPress={() => navigation.navigate('AddEditTask' as any, { projectId: project.id })}
         >
           <Text style={[styles.addButton, { color: colors.primary }]}>{t('add')}</Text>
         </TouchableOpacity>

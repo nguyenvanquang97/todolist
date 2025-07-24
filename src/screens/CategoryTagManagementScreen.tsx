@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useTheme } from '@context/ThemeContext';
@@ -15,7 +15,7 @@ import { useTranslation } from '@i18n/index';
 import { RootStackParamList } from '@/navigation/RootStackNavigator';
 
 
-type CategoryTagManagementScreenNavigationProp = StackNavigationProp<RootStackParamList>;
+type CategoryTagManagementScreenNavigationProp = NavigationProp<RootStackParamList>;
 
 const CategoryTagManagementScreen: React.FC = () => {
   const { colors } = useTheme();

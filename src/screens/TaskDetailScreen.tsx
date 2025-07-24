@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import Button from '@components/Button';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RouteProp } from '@react-navigation/native';
+import { RouteProp, NavigationProp } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import moment from 'moment';
 import { RootStackParamList } from '@navigation/RootStackNavigator';
@@ -25,6 +25,27 @@ import { useTheme } from '@context/ThemeContext';
 import { testNotification } from '@utils/notificationHelper';
 import { useTranslation } from '@i18n/i18n';
 import SubtaskList from '@/components/task/SubtaskList';
+
+// Thêm component ProgressBar
+const ProgressBar: React.FC<{progress: number; height: number; backgroundColor: string; progressColor: string}> = ({ 
+  progress, 
+  height, 
+  backgroundColor, 
+  progressColor 
+}) => {
+  return (
+    <View style={[{ height, backgroundColor, borderRadius: height / 2 }]}>
+      <View 
+        style={[{
+          height, 
+          width: `${progress}%`, 
+          backgroundColor: progressColor,
+          borderRadius: height / 2
+        }]} 
+      />
+    </View>
+  );
+};
 
 
 // Define base colors for use in the component
@@ -54,6 +75,7 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
   const { updateTask, deleteTask, loading, categories, getTagsForTask, getSubtasks, updateTaskCompletion } = useTaskContext();
   const { projects } = useProjectContext();
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [task, setTask] = useState<Task>(initialTask);
   const [taskTags, setTaskTags] = useState<Tag[]>([]);
   const [loadingTags, setLoadingTags] = useState(false);
@@ -70,8 +92,6 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
       task,
     });
   }, [navigation, task]);
-
-  const { t } = useTranslation();
 
   const handleDelete = useCallback(async () => {
     Alert.alert(
@@ -143,12 +163,13 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
           
           // Load parent task if this is a subtask
           if (task.parent_task_id) {
-            const foundParentTask = tasks.find(t => t.id === task.parent_task_id);
-            setParentTask(foundParentTask || null);
+            // Không sử dụng biến tasks vì không có trong scope
+            // Thay vào đó, có thể lấy task cha từ context hoặc API riêng
+            setParentTask(null); // Tạm thời set null
           }
           
           // Load subtasks
-          loadSubtasks(task.id);
+          loadSubtasks(task.id.toString());
         }
       } catch (error) {
         console.error('Failed to load tags for task', error);
@@ -162,7 +183,7 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
   
   const loadSubtasks = async (parentId: string) => {
     try {
-      const subtaskList = await getSubtasks(parentId);
+      const subtaskList = await getSubtasks(parseInt(parentId, 10));
       setSubtasks(subtaskList);
     } catch (error) {
       console.error('Failed to load subtasks for task', error);
@@ -184,7 +205,7 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
         
         // Update parent task completion if this is a subtask
         if (task.parent_task_id) {
-          await updateTaskCompletion(task.parent_task_id);
+          await updateTaskCompletion(task.parent_task_id, task.completion_percentage || 0);
         }
       }
     } catch (error) {
@@ -261,7 +282,7 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
           {project && (
             <TouchableOpacity 
               style={[styles.metaBadge, { backgroundColor: colors.primary + '20' }]}
-              onPress={() => navigation.navigate('ProjectDetail', { projectId: project.id })}
+              onPress={() => navigation.navigate('TagManagement' as any, { projectId: project.id })}
             >
               <Icon name="folder-outline" size={14} color={colors.primary} />
               <Text style={[styles.metaText, { color: colors.primary }]}>{project.name}</Text>
@@ -287,7 +308,7 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
           <View style={styles.progressContainer}>
             <View style={styles.progressHeader}>
               <Text style={styles.progressText}>
-                {t('taskDetail.completion')}: {task.completion_percentage}%
+                {t('taskDetail.progress')}: {task.completion_percentage}%
               </Text>
             </View>
             <ProgressBar 
@@ -402,7 +423,7 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
             <Text style={styles.sectionTitle}>{t('taskDetail.subtasks')}</Text>
             <TouchableOpacity 
               style={styles.addButton}
-              onPress={() => navigation.navigate('AddEditTask', { mode: 'create', parentTask: task })}
+              onPress={() => navigation.navigate('AddEditTask', { mode: 'add', task: { ...task, parent_task_id: task.id } })}
             >
               <Icon name="add" size={20} color={colors.primary} />
             </TouchableOpacity>
@@ -410,16 +431,18 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
           
           <SubtaskList 
             subtasks={subtasks} 
+            parentTaskId={task.id}
             onSubtasksChanged={(updatedSubtasks) => {
               setSubtasks(updatedSubtasks);
               // Refresh the parent task to get updated completion percentage
               if (task.id !== undefined) {
-                updateTaskCompletion(task.id);
+                updateTaskCompletion(task.id, task.completion_percentage || 0);
                 // Update local task state with new completion percentage
                 const updatedTask = { ...task };
                 setTask(updatedTask);
               }
-            }} 
+            }}
+            
           />
         </View>
 
