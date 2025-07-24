@@ -125,6 +125,12 @@ export const fonts = {
   medium: 'System',
   bold: 'System',
   light: 'System',
+  weight: {
+    regular: '400',
+    medium: '500',
+    bold: '700',
+    light: '300',
+  },
   sizes: {
     xs: 12,
     sm: 14,

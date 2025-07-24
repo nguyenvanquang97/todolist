@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { showToast } from '@components/Toast';
 import { useTaskContext } from '@context/TaskContext';
 import { useTheme } from '@context/ThemeContext';
 import { Task, Project } from '../../types/Task';
@@ -31,26 +32,22 @@ const ProjectTaskList: React.FC<ProjectTaskListProps> = ({ project }) => {
   };
 
   const handleRemoveTaskFromProject = (taskId: number) => {
-    Alert.alert(
-      t('remove_from_project'),
-      t('remove_task_from_project_confirmation'),
-      [
-        { text: t('cancel'), style: 'cancel' },
-        {
-          text: t('remove'),
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await updateTaskProject(taskId, null);
-              // Task list will update automatically via the tasks context
-            } catch (error) {
-              console.error('Error removing task from project:', error);
-              Alert.alert(t('error'), t('failed_to_remove_task_from_project'));
-            }
-          },
+    showToast('info', t('remove_from_project'), t('remove_task_from_project_confirmation'), [
+      { text: t('cancel'), onPress: () => {}, style: 'cancel' },
+      {
+        text: t('remove'),
+        onPress: async () => {
+          try {
+            await updateTaskProject(taskId, null);
+            // Task list will update automatically via the tasks context
+          } catch (error) {
+            console.error('Error removing task from project:', error);
+            showToast('error', t('error'), t('failed_to_remove_task_from_project'));
+          }
         },
-      ],
-    );
+        style: 'destructive'
+      }
+    ]);
   };
 
   const renderItem = ({ item }: { item: Task }) => (

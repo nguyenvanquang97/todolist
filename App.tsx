@@ -8,6 +8,7 @@ import {ProjectProvider} from './src/context/ProjectContext';
 import notifee from '@notifee/react-native';
 import {RootStackNavigator, navigationRef} from '@/navigation/index';
 import changeNavigationBarColor from 'react-native-navigation-bar-color';
+import ToastProvider from './src/components/Toast';
 
 // Component StatusBar tùy chỉnh theo theme
 const AppStatusBar: React.FC = () => {
@@ -106,7 +107,9 @@ const App: React.FC = () => {
       <ThemeProvider>
         <TaskProvider>
           <ProjectProvider>
-            <AppContent />
+            <ToastProvider>
+              <AppContent />
+            </ToastProvider>
           </ProjectProvider>
         </TaskProvider>
       </ThemeProvider>
