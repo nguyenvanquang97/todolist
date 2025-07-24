@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { showToast } from '@components/Toast';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, TextInput } from 'react-native';
 import { useTaskContext } from '@context/TaskContext';
 import { useTheme } from '@context/ThemeContext';
 import type { Task } from '@/types/Task';
@@ -80,7 +79,7 @@ const SubtaskList: React.FC<SubtaskListProps> = ({ parentTaskId, subtasks: initi
 
   const handleAddSubtask = async () => {
     if (!newSubtaskTitle.trim() || !parentTaskId) {
-      showToast('error', t('common.error'), t('addEditTask.errors.emptyTitle'));
+      Alert.alert(t('common.error'), t('addEditTask.errors.emptyTitle'));
       return;
     }
 
@@ -99,7 +98,7 @@ const SubtaskList: React.FC<SubtaskListProps> = ({ parentTaskId, subtasks: initi
       loadSubtasks();
     } catch (error) {
       console.error('Error adding subtask:', error);
-      showToast('error', t('common.error'), t('addEditTask.addError'));
+      Alert.alert(t('common.error'), t('addEditTask.addError'));
     }
   };
 
@@ -116,27 +115,31 @@ const SubtaskList: React.FC<SubtaskListProps> = ({ parentTaskId, subtasks: initi
       loadSubtasks();
     } catch (error) {
       console.error('Error updating subtask status:', error);
-      showToast('error', t('common.error'), t('addEditTask.updateError'));
+      Alert.alert(t('common.error'), t('addEditTask.updateError'));
     }
   };
 
   const handleDeleteSubtask = (subtaskId: number) => {
-    // Show confirmation message
-    showToast('info', t('taskDetail.deleteConfirmTitle'), t('taskDetail.deleteConfirmMessage'));
-    
-    // Add confirmation dialog with custom UI instead of using Alert
-    // For now, we'll just proceed with deletion as a temporary solution
-    // In a real implementation, you would show a custom confirmation dialog here
-    setTimeout(async () => {
-      try {
-        await deleteTask(subtaskId);
-        loadSubtasks();
-        showToast('success', t('common.success'), t('common.deleted'));
-      } catch (error) {
-        console.error('Error deleting subtask:', error);
-        showToast('error', t('common.error'), t('taskList.deleteError'));
-      }
-    }, 1500);
+    Alert.alert(
+      t('taskDetail.deleteConfirmTitle'),
+      t('taskDetail.deleteConfirmMessage'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('common.delete'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteTask(subtaskId);
+              loadSubtasks();
+            } catch (error) {
+              console.error('Error deleting subtask:', error);
+              Alert.alert(t('common.error'), t('taskList.deleteError'));
+            }
+          },
+        },
+      ],
+    );
   };
 
   const renderSubtask = (subtask: Task) => {

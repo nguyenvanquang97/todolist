@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { showToast } from '@components/Toast';
 import {
   View,
   FlatList,
   TouchableOpacity,
   Text,
+  Alert,
   RefreshControl,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -87,8 +87,12 @@ const TaskListScreen: React.FC = () => {
 
   useEffect(() => {
     if (error) {
-      showToast('error', t('common.error'), error);
-      clearError();
+      Alert.alert(t('common.error'), error, [
+        {
+          text: t('common.ok'),
+          onPress: clearError,
+        },
+      ]);
     }
   }, [error, clearError, t]);
 
@@ -133,7 +137,7 @@ const TaskListScreen: React.FC = () => {
     try {
       await updateTask(id, { status });
     } catch (error) {
-      showToast('error', t('common.error'), t('taskDetail.updateStatusError'));
+      Alert.alert(t('common.error'), t('taskDetail.updateStatusError'));
     }
   }, [updateTask, t]);
 
@@ -141,7 +145,7 @@ const TaskListScreen: React.FC = () => {
     try {
       await deleteTask(id);
     } catch (error) {
-      showToast('error', t('common.error'), t('taskList.deleteError'));
+      Alert.alert(t('common.error'), t('taskList.deleteError'));
     }
   }, [deleteTask, t]);
 

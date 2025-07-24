@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { showToast } from '@components/Toast';
 import {
   View,
   Text,
@@ -142,8 +141,9 @@ const [showParentTaskModal, setShowParentTaskModal] = useState(false);
           }
         }
         
-        showToast('success', t('common.success'), t('addEditTask.updateSuccess'));
-        navigation.goBack();
+        Alert.alert(t('common.success'), t('addEditTask.updateSuccess'), [
+          { text: t('common.ok'), onPress: () => navigation.goBack() },
+        ]);
       } else {
         // Add new task
         const newTaskId = await addTask({
@@ -162,11 +162,12 @@ const [showParentTaskModal, setShowParentTaskModal] = useState(false);
           }
         }
         
-        showToast('success', t('common.success'), t('addEditTask.addSuccess'));
-        navigation.goBack();
+        Alert.alert(t('common.success'), t('addEditTask.addSuccess'), [
+          { text: t('common.ok'), onPress: () => navigation.goBack() },
+        ]);
       }
     } catch (error) {
-      showToast('error', t('common.error'), t('addEditTask.saveError'));
+      Alert.alert(t('common.error'), t('addEditTask.saveError'));
     }
   }, [validateForm, title, description, priority, dueDate, selectedCategory, selectedTags, isEditMode, task, updateTask, addTask, getTagsForTask, addTagToTask, removeTagFromTask, navigation, t]);
 

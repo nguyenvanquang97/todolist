@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput } from 'react-native';
-import { showToast } from '@components/Toast';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Alert } from 'react-native';
 import { useTaskContext } from '@context/TaskContext';
 import { Tag } from '@/types/Task';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -26,7 +25,7 @@ const TagManagementScreen: React.FC = () => {
 
   const handleAddTag = () => {
     if (!name.trim()) {
-      showToast('error', t('common.error'), t('common.errors.validation'));
+      Alert.alert(t('common.error'), t('common.errors.validation'));
       return;
     }
 
@@ -41,7 +40,7 @@ const TagManagementScreen: React.FC = () => {
   const handleUpdateTag = () => {
     if (!editingTag || editingTag.id === undefined) return;
     if (!name.trim()) {
-      showToast('error', t('common.error'), t('common.errors.validation'));
+      Alert.alert(t('common.error'), t('common.errors.validation'));
       return;
     }
 
@@ -54,20 +53,22 @@ const TagManagementScreen: React.FC = () => {
   };
 
   const handleDeleteTag = (id: number) => {
-    // Show confirmation message
-    showToast('info', t('common.confirm'), t('taskDetail.deleteConfirmMessage'));
-    
-    // Add confirmation dialog with custom UI instead of using Alert
-    // For now, we'll just proceed with deletion as a temporary solution
-    // In a real implementation, you would show a custom confirmation dialog here
-    setTimeout(() => {
-      deleteTag(id).then(() => {
-        resetForm();
-        showToast('success', t('common.success'), t('common.deleted'));
-      }).catch(error => {
-        showToast('error', t('common.error'), t('common.deleteError'));
-      });
-    }, 1500);
+    Alert.alert(
+      t('common.confirm'),
+      t('taskDetail.deleteConfirmMessage'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('common.delete'),
+          style: 'destructive',
+          onPress: () => {
+            deleteTag(id).then(() => {
+              resetForm();
+            });
+          },
+        },
+      ]
+    );
   };
 
   const startEditing = (tag: Tag) => {
