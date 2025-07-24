@@ -30,7 +30,7 @@ const CategoryTagManagementScreen: React.FC = () => {
       contentContainerStyle={styles.contentContainer}
     >
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{t('settings.categories.tags')}</Text>
+
         <TouchableOpacity
           style={styles.settingItem}
           onPress={() => navigation.navigate('CategoryManagement')}

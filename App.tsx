@@ -1,6 +1,6 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, Fragment} from 'react';
 import {StatusBar, Platform, PermissionsAndroid} from 'react-native';
-import {NavigationContainer} from '@react-navigation/native';
+import {NavigationContainer, DefaultTheme, DarkTheme} from '@react-navigation/native';
 import {TaskProvider} from './src/context/TaskContext';
 import {ThemeProvider, useTheme} from './src/context/ThemeContext';
 import {SettingsProvider} from './src/context/SettingsContext';
@@ -36,7 +36,37 @@ const AppStatusBar: React.FC = () => {
   );
 };
 
-const App: React.FC = () => {
+// Component nội dung ứng dụng với NavigationContainer đã được theme hóa
+const AppContent: React.FC = () => {
+  const { isDarkMode, colors } = useTheme();
+  
+  // Tạo theme cho NavigationContainer
+  const navigationTheme = isDarkMode
+    ? {
+        ...DarkTheme,
+        colors: {
+          ...DarkTheme.colors,
+          primary: colors.primary,
+          background: colors.background,
+          card: colors.card,
+          text: colors.text,
+          border: colors.border,
+          notification: colors.danger,
+        },
+      }
+    : {
+        ...DefaultTheme,
+        colors: {
+          ...DefaultTheme.colors,
+          primary: colors.primary,
+          background: colors.background,
+          card: colors.card,
+          text: colors.text,
+          border: colors.border,
+          notification: colors.danger,
+        },
+      };
+
   useEffect(() => {
     // Yêu cầu quyền thông báo trên Android 13+
     const requestPermissions = async () => {
@@ -57,13 +87,24 @@ const App: React.FC = () => {
   }, []);
 
   return (
+    <>
+      <AppStatusBar />
+      <NavigationContainer
+        ref={navigationRef}
+        theme={navigationTheme}
+      >
+        <RootStackNavigator />
+      </NavigationContainer>
+    </>
+  );
+};
+
+const App: React.FC = () => {
+  return (
     <SettingsProvider>
       <ThemeProvider>
         <TaskProvider>
-          <AppStatusBar />
-          <NavigationContainer ref={navigationRef}>
-            <RootStackNavigator />
-          </NavigationContainer>
+          <AppContent />
         </TaskProvider>
       </ThemeProvider>
     </SettingsProvider>

@@ -1,5 +1,8 @@
 import React from 'react';
-import {createStackNavigator} from '@react-navigation/stack';
+import {
+  CardStyleInterpolators,
+  createStackNavigator,
+} from '@react-navigation/stack';
 import TaskListScreen from '@screens/TaskListScreen';
 import AddEditTaskScreen from '@screens/AddEditTaskScreen';
 import TaskDetailScreen from '@screens/TaskDetailScreen';
@@ -44,6 +47,9 @@ const RootStackNavigator: React.FC = () => {
         headerTitleStyle: {
           fontWeight: 'bold' as const,
         },
+        cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+        gestureEnabled: true,
+        gestureDirection: 'horizontal',
       }}>
       <RootStack.Screen
         name="BottomTabNavigator"
