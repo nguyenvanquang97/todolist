@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ToastAndroid,
   Platform,
+  TouchableOpacity,
 } from 'react-native';
 import Button from '@components/Button';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -15,6 +16,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import moment from 'moment';
 import { RootStackParamList } from '@navigation/RootStackNavigator';
 import { useTaskContext } from '@context/TaskContext';
+import { useProjectContext } from '@context/ProjectContext';
 import { Task, Tag } from '../types/Task';
 import LoadingSpinner from '@components/LoadingSpinner';
 import { globalStyles } from '@styles/globalStyles';
@@ -22,6 +24,8 @@ import { spacing, borderRadius, fonts } from '@styles/theme';
 import { useTheme } from '@context/ThemeContext';
 import { testNotification } from '@utils/notificationHelper';
 import { useTranslation } from '@i18n/i18n';
+import SubtaskList from '@/components/task/SubtaskList';
+
 
 // Define base colors for use in the component
 const baseColors = {
@@ -47,11 +51,15 @@ interface Props {
 
 const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
   const { task: initialTask } = route.params;
-  const { updateTask, deleteTask, loading, categories, getTagsForTask } = useTaskContext();
+  const { updateTask, deleteTask, loading, categories, getTagsForTask, getSubtasks, updateTaskCompletion } = useTaskContext();
+  const { projects } = useProjectContext();
   const { colors } = useTheme();
   const [task, setTask] = useState<Task>(initialTask);
   const [taskTags, setTaskTags] = useState<Tag[]>([]);
   const [loadingTags, setLoadingTags] = useState(false);
+  const [subtasks, setSubtasks] = useState<Task[]>([]);
+  const [parentTask, setParentTask] = useState<Task | null>(null);
+  const [project, setProject] = useState<any | null>(null);
   const styles = createStyles(colors);
 
   console.log("taskTags", taskTags);
@@ -126,6 +134,21 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
         if (task.id !== undefined) {
           const tags = await getTagsForTask(task.id);
           setTaskTags(tags);
+          
+          // Load project if task has project_id
+          if (task.project_id) {
+            const foundProject = projects.find(p => p.id === task.project_id);
+            setProject(foundProject || null);
+          }
+          
+          // Load parent task if this is a subtask
+          if (task.parent_task_id) {
+            const foundParentTask = tasks.find(t => t.id === task.parent_task_id);
+            setParentTask(foundParentTask || null);
+          }
+          
+          // Load subtasks
+          loadSubtasks(task.id);
         }
       } catch (error) {
         console.error('Failed to load tags for task', error);
@@ -135,14 +158,34 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
     };
     
     loadTags();
-  }, [task.id]); // Loại bỏ getTagsForTask khỏi dependencies để tránh vòng lặp vô hạn
+  }, [task.id, projects]); // Loại bỏ getTagsForTask khỏi dependencies để tránh vòng lặp vô hạn
+  
+  const loadSubtasks = async (parentId: string) => {
+    try {
+      const subtaskList = await getSubtasks(parentId);
+      setSubtasks(subtaskList);
+    } catch (error) {
+      console.error('Failed to load subtasks for task', error);
+    }
+  };
 
   const handleToggleStatus = async () => {
     try {
       if (task.id !== undefined) {
         const newStatus = task.status === 'completed' ? 'pending' : 'completed';
-        await updateTask(task.id, { status: newStatus });
-        setTask({ ...task, status: newStatus });
+        const newCompletionPercentage = newStatus === 'completed' ? 100 : 0;
+        
+        await updateTask(task.id, { 
+          status: newStatus,
+          completion_percentage: newCompletionPercentage 
+        });
+        
+        setTask({ ...task, status: newStatus, completion_percentage: newCompletionPercentage });
+        
+        // Update parent task completion if this is a subtask
+        if (task.parent_task_id) {
+          await updateTaskCompletion(task.parent_task_id);
+        }
       }
     } catch (error) {
       Alert.alert(t('common.error'), t('taskDetail.updateStatusError'));
@@ -213,8 +256,48 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
           )}
         </View>
 
+        {/* Project and Parent Task Info */}
+        <View style={styles.metaInfoContainer}>
+          {project && (
+            <TouchableOpacity 
+              style={[styles.metaBadge, { backgroundColor: colors.primary + '20' }]}
+              onPress={() => navigation.navigate('ProjectDetail', { projectId: project.id })}
+            >
+              <Icon name="folder-outline" size={14} color={colors.primary} />
+              <Text style={[styles.metaText, { color: colors.primary }]}>{project.name}</Text>
+            </TouchableOpacity>
+          )}
+          
+          {parentTask && (
+            <TouchableOpacity 
+              style={[styles.metaBadge, { backgroundColor: colors.secondary + '20' }]}
+              onPress={() => navigation.navigate('TaskDetail', { task: parentTask })}
+            >
+              <Icon name="git-merge-outline" size={14} color={colors.secondary} />
+              <Text style={[styles.metaText, { color: colors.secondary }]}>{t('taskDetail.parentTask')}: {parentTask.title}</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+        
         {/* Title */}
         <Text style={styles.title}>{task.title}</Text>
+        
+        {/* Completion Progress */}
+        {task.completion_percentage !== undefined && (
+          <View style={styles.progressContainer}>
+            <View style={styles.progressHeader}>
+              <Text style={styles.progressText}>
+                {t('taskDetail.completion')}: {task.completion_percentage}%
+              </Text>
+            </View>
+            <ProgressBar 
+              progress={task.completion_percentage || 0} 
+              height={8} 
+              backgroundColor={colors.border}
+              progressColor={colors.primary}
+            />
+          </View>
+        )}
 
         {/* Description */}
         {task.description && (
@@ -313,6 +396,33 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
           </View>
         </View>
 
+        {/* Subtasks Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>{t('taskDetail.subtasks')}</Text>
+            <TouchableOpacity 
+              style={styles.addButton}
+              onPress={() => navigation.navigate('AddEditTask', { mode: 'create', parentTask: task })}
+            >
+              <Icon name="add" size={20} color={colors.primary} />
+            </TouchableOpacity>
+          </View>
+          
+          <SubtaskList 
+            subtasks={subtasks} 
+            onSubtasksChanged={(updatedSubtasks) => {
+              setSubtasks(updatedSubtasks);
+              // Refresh the parent task to get updated completion percentage
+              if (task.id !== undefined) {
+                updateTaskCompletion(task.id);
+                // Update local task state with new completion percentage
+                const updatedTask = { ...task };
+                setTask(updatedTask);
+              }
+            }} 
+          />
+        </View>
+
         {/* Action Button */}
         <Button
           title={task.status === 'completed' ? t('taskDetail.markIncomplete') : t('taskDetail.markComplete')}
@@ -339,6 +449,46 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
 
 // Create styles with theme colors
 const createStyles = (colors: any) => StyleSheet.create({
+  metaInfoContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  metaBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+    gap: spacing.xs,
+  },
+  metaText: {
+    fontSize: fonts.sizes.sm,
+    fontWeight: '500',
+  },
+  progressContainer: {
+    marginBottom: spacing.lg,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: spacing.xs,
+  },
+  progressText: {
+    fontSize: fonts.sizes.sm,
+    color: colors.textSecondary,
+    fontWeight: '500',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  addButton: {
+    padding: spacing.xs,
+  },
   content: {
     padding: spacing.lg,
   },

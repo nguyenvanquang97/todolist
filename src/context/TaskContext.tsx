@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useReducer, useCallback } from 'react';
-import { Task, TaskFilter, TaskContextType, Category, Tag } from '../types/Task';
+import { Task, TaskFilter, TaskContextType, Category, Tag, Project } from '../types/Task';
 import DatabaseHelper from '@database/DatabaseHelper';
 import NotificationService from '@services/NotificationService';
 import { scheduleNotificationsForTasks } from '@utils/notificationHelper';
@@ -8,6 +8,7 @@ interface TaskState {
   tasks: Task[];
   categories: Category[];
   tags: Tag[];
+  projects: Project[];
   loading: boolean;
   error: string | null;
 }
@@ -27,12 +28,15 @@ type TaskAction =
   | { type: 'SET_TAGS'; payload: Tag[] }
   | { type: 'ADD_TAG'; payload: Tag }
   | { type: 'UPDATE_TAG'; payload: { id: number; tag: Partial<Tag> } }
-  | { type: 'DELETE_TAG'; payload: number };
+  | { type: 'DELETE_TAG'; payload: number }
+  | { type: 'SET_PROJECTS'; payload: Project[] }
+  | { type: 'UPDATE_TASK_COMPLETION'; payload: { id: number; completionPercentage: number } };
 
 const initialState: TaskState = {
   tasks: [],
   categories: [],
   tags: [],
+  projects: [],
   loading: false,
   error: null,
 };
@@ -105,6 +109,17 @@ const taskReducer = (state: TaskState, action: TaskAction): TaskState => {
         ...state,
         tags: state.tags.filter(tag => tag.id !== action.payload),
       };
+    case 'SET_PROJECTS':
+      return { ...state, projects: action.payload };
+    case 'UPDATE_TASK_COMPLETION':
+      return {
+        ...state,
+        tasks: state.tasks.map(task =>
+          task.id === action.payload.id
+            ? { ...task, completion_percentage: action.payload.completionPercentage }
+            : task
+        ),
+      };
     default:
       return state;
   }
@@ -146,6 +161,10 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
         const tags = await dbHelper.getAllTags();
         dispatch({ type: 'SET_TAGS', payload: tags });
 
+        // Tải tất cả các dự án
+        const projects = await dbHelper.getAllProjects();
+        dispatch({ type: 'SET_PROJECTS', payload: projects });
+
         // Lên lịch thông báo cho tất cả các task chưa hoàn thành có ngày đến hạn
         await scheduleNotificationsForTasks(tasks);
       } catch (error) {
@@ -180,6 +199,10 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
       // Tải tất cả các nhãn
       const tags = await dbHelper.getAllTags();
       dispatch({ type: 'SET_TAGS', payload: tags });
+
+      // Tải tất cả các dự án
+      const projects = await dbHelper.getAllProjects();
+      dispatch({ type: 'SET_PROJECTS', payload: projects });
 
       // Lên lịch thông báo cho tất cả các task chưa hoàn thành có ngày đến hạn
       await scheduleNotificationsForTasks(tasks);
@@ -458,10 +481,51 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
     dispatch({ type: 'CLEAR_ERROR' });
   };
 
+  // Subtask methods
+  const getSubtasks = async (parentTaskId: number) => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      const subtasks = await dbHelper.getSubtasks(parentTaskId);
+      return subtasks;
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to get subtasks' });
+      console.error('Get subtasks error:', error);
+      return [];
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  };
+
+  const updateTaskCompletion = async (taskId: number, completionPercentage: number) => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      await dbHelper.updateTaskCompletion(taskId, completionPercentage);
+      dispatch({ 
+        type: 'UPDATE_TASK_COMPLETION', 
+        payload: { id: taskId, completionPercentage } 
+      });
+
+      // If this is a subtask, update the parent task's completion percentage
+      const task = state.tasks.find(t => t.id === taskId);
+      if (task && task.parent_task_id) {
+        await dbHelper.calculateParentCompletion(task.parent_task_id);
+        // Reload tasks to get updated parent completion percentage
+        const tasks = await dbHelper.getAllTasks();
+        dispatch({ type: 'SET_TASKS', payload: tasks });
+      }
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to update task completion' });
+      console.error('Update task completion error:', error);
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  };
+
   const value: TaskContextType = {
     tasks: state.tasks,
     categories: state.categories,
     tags: state.tags,
+    projects: state.projects,
     loading: state.loading,
     error: state.error,
     loadTasks,
@@ -483,6 +547,9 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
     getTagsForTask,
     addTagToTask,
     removeTagFromTask,
+    // Subtask methods
+    getSubtasks,
+    updateTaskCompletion,
   };
 
   return <TaskContext.Provider value={value}>{children}</TaskContext.Provider>;

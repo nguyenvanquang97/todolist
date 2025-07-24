@@ -6,6 +6,7 @@ import {spacing, borderRadius, fonts} from '@styles/theme';
 import {globalStyles} from '@styles/globalStyles';
 import {useTheme} from '@context/ThemeContext';
 import {useTaskContext} from '@context/TaskContext';
+import {useProjectContext} from '@context/ProjectContext';
 import Button from '@components/Button';
 import {useTranslation} from '@i18n/i18n';
 
@@ -90,6 +91,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
   const {colors} = useTheme();
   const {t} = useTranslation();
   const {categories} = useTaskContext();
+  const {projects} = useProjectContext();
   const [tempFilter, setTempFilter] = useState<TaskFilter>(currentFilter);
   const styles = createStyles(colors);
 
@@ -117,6 +119,8 @@ const FilterModal: React.FC<FilterModalProps> = ({
       priority: 'all',
       searchQuery: '',
       category_id: 'all',
+      project_id: 'all',
+      show_subtasks: true,
     };
     setTempFilter(resetFilter);
     onApplyFilter(resetFilter);
@@ -286,6 +290,145 @@ const FilterModal: React.FC<FilterModalProps> = ({
                       )}
                     </TouchableOpacity>
                   ))}
+                </View>
+              </View>
+
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>{t('taskList.filterProject')}</Text>
+                <View style={styles.optionsContainer}>
+                  {/* Tùy chọn 'Tất cả' cho dự án */}
+                  <TouchableOpacity
+                    key="all-projects"
+                    style={[
+                      styles.optionButton,
+                      tempFilter.project_id === 'all' && styles.selectedOption,
+                    ]}
+                    onPress={() => setTempFilter({
+                      ...tempFilter,
+                      project_id: 'all',
+                    })}
+                    activeOpacity={0.7}>
+                    <Text
+                      style={[
+                        styles.optionText,
+                        tempFilter.project_id === 'all' && styles.selectedOptionText,
+                      ]}>
+                      {t('common.all')}
+                    </Text>
+                    {tempFilter.project_id === 'all' && (
+                      <Icon name="checkmark" size={20} color={colors.primary} />
+                    )}
+                  </TouchableOpacity>
+                  
+                  {/* Tùy chọn 'Không có dự án' */}
+                  <TouchableOpacity
+                    key="none-project"
+                    style={[
+                      styles.optionButton,
+                      tempFilter.project_id === 'none' && styles.selectedOption,
+                    ]}
+                    onPress={() => setTempFilter({
+                      ...tempFilter,
+                      project_id: 'none',
+                    })}
+                    activeOpacity={0.7}>
+                    <Text
+                      style={[
+                        styles.optionText,
+                        tempFilter.project_id === 'none' && styles.selectedOptionText,
+                      ]}>
+                      {t('taskDetail.noProject')}
+                    </Text>
+                    {tempFilter.project_id === 'none' && (
+                      <Icon name="checkmark" size={20} color={colors.primary} />
+                    )}
+                  </TouchableOpacity>
+                  
+                  {/* Danh sách các dự án */}
+                  {projects.map(project => (
+                    <TouchableOpacity
+                      key={project.id}
+                      style={[
+                        styles.optionButton,
+                        tempFilter.project_id === project.id.toString() && styles.selectedOption,
+                      ]}
+                      onPress={() => setTempFilter({
+                        ...tempFilter,
+                        project_id: project.id.toString(),
+                      })}
+                      activeOpacity={0.7}>
+                      <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                        <View 
+                          style={{
+                            width: 12, 
+                            height: 12, 
+                            borderRadius: 6, 
+                            backgroundColor: project.color,
+                            marginRight: spacing.sm
+                          }} 
+                        />
+                        <Text
+                          style={[
+                            styles.optionText,
+                            tempFilter.project_id === project.id.toString() && styles.selectedOptionText,
+                          ]}>
+                          {project.name}
+                        </Text>
+                      </View>
+                      {tempFilter.project_id === project.id.toString() && (
+                        <Icon name="checkmark" size={20} color={colors.primary} />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>{t('taskList.subtaskOptions')}</Text>
+                <View style={styles.optionsContainer}>
+                  <TouchableOpacity
+                    style={[
+                      styles.optionButton,
+                      tempFilter.show_subtasks && styles.selectedOption,
+                    ]}
+                    onPress={() => setTempFilter({
+                      ...tempFilter,
+                      show_subtasks: true,
+                    })}
+                    activeOpacity={0.7}>
+                    <Text
+                      style={[
+                        styles.optionText,
+                        tempFilter.show_subtasks && styles.selectedOptionText,
+                      ]}>
+                      {t('taskList.showAllTasks')}
+                    </Text>
+                    {tempFilter.show_subtasks && (
+                      <Icon name="checkmark" size={20} color={colors.primary} />
+                    )}
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.optionButton,
+                      !tempFilter.show_subtasks && styles.selectedOption,
+                    ]}
+                    onPress={() => setTempFilter({
+                      ...tempFilter,
+                      show_subtasks: false,
+                    })}
+                    activeOpacity={0.7}>
+                    <Text
+                      style={[
+                        styles.optionText,
+                        !tempFilter.show_subtasks && styles.selectedOptionText,
+                      ]}>
+                      {t('taskList.hideSubtasks')}
+                    </Text>
+                    {!tempFilter.show_subtasks && (
+                      <Icon name="checkmark" size={20} color={colors.primary} />
+                    )}
+                  </TouchableOpacity>
                 </View>
               </View>
             </ScrollView>

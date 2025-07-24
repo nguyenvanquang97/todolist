@@ -11,6 +11,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { RootStackParamList } from '@navigation/RootStackNavigator';
 import { useTaskContext } from '@context/TaskContext';
+import { useProjectContext } from '@context/ProjectContext';
 import { Task, TaskFilter, Category } from '../types/Task';
 import MemoizedTaskItem from '@components/MemoizedTaskItem';
 import SearchBar from '@components/SearchBar';
@@ -39,7 +40,11 @@ const TaskListScreen: React.FC<Props> = ({ navigation }) => {
     searchTasks,
     filterTasks,
     clearError,
+    getSubtasks,
+    projects,
   } = useTaskContext();
+  
+  const { projects: projectsContext } = useProjectContext();
 
   const { colors } = useTheme();
   const { t } = useTranslation();
@@ -50,6 +55,8 @@ const TaskListScreen: React.FC<Props> = ({ navigation }) => {
     priority: 'all',
     searchQuery: '',
     category_id: 'all',
+    project_id: 'all',
+    show_subtasks: true,
   });
   const [refreshing, setRefreshing] = useState(false);
 
@@ -62,6 +69,12 @@ const TaskListScreen: React.FC<Props> = ({ navigation }) => {
             onPress={() => setShowFilterModal(true)}
           >
             <Icon name="filter" size={24} color={baseColors.white} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={{ marginRight: 15 }}
+            onPress={() => navigation.navigate('ProjectManagement')}
+          >
+            <Icon name="folder-outline" size={24} color={baseColors.white} />
           </TouchableOpacity>
           <TouchableOpacity
             style={{ marginRight: 15 }}
@@ -147,29 +160,49 @@ const TaskListScreen: React.FC<Props> = ({ navigation }) => {
     await applyCurrentFilter(filter);
   }, [applyCurrentFilter]);
 
-  const renderTaskItem = useCallback(({ item }: { item: Task }) => (
-    <MemoizedTaskItem
-      task={item}
-      onPress={() => handleTaskPress(item)}
-      onToggleStatus={handleToggleStatus}
-      onDelete={handleDeleteTask}
-    />
-  ), [handleTaskPress, handleToggleStatus, handleDeleteTask]);
+  const renderTaskItem = useCallback(({ item }: { item: Task }) => {
+    // Skip subtasks if show_subtasks is false
+    if (!currentFilter.show_subtasks && item.parent_task_id) {
+      return null;
+    }
+    
+    // Filter by project
+    if (currentFilter.project_id === 'none' && item.project_id) {
+      return null;
+    }
+    
+    if (currentFilter.project_id !== 'all' && currentFilter.project_id !== 'none' && 
+        item.project_id?.toString() !== currentFilter.project_id) {
+      return null;
+    }
+    
+    return (
+      <MemoizedTaskItem
+        task={item}
+        onPress={() => handleTaskPress(item)}
+        onToggleStatus={handleToggleStatus}
+        onDelete={handleDeleteTask}
+      />
+    );
+  }, [handleTaskPress, handleToggleStatus, handleDeleteTask, currentFilter.show_subtasks, currentFilter.project_id]);
 
   const renderEmptyState = useCallback(() => (
     <View style={[globalStyles.emptyContainer, { backgroundColor: colors.background }]}>
       <Icon name="clipboard-outline" size={64} color={colors.textDisabled} />
       <Text style={[globalStyles.emptyText, { color: colors.text }]}>
-        {currentFilter.searchQuery || currentFilter.status !== 'all' || currentFilter.priority !== 'all' || currentFilter.category_id !== 'all'
+        {currentFilter.searchQuery || currentFilter.status !== 'all' || currentFilter.priority !== 'all' || 
+         currentFilter.category_id !== 'all' || currentFilter.project_id !== 'all' || !currentFilter.show_subtasks
           ? t('taskList.noSearchResults')
           : t('taskList.emptyList')}
       </Text>
       <Text style={[globalStyles.emptySubtext, { color: colors.textSecondary }]}>
-        {currentFilter.searchQuery || currentFilter.status !== 'all' || currentFilter.priority !== 'all' || currentFilter.category_id !== 'all'
+        {currentFilter.searchQuery || currentFilter.status !== 'all' || currentFilter.priority !== 'all' || 
+         currentFilter.category_id !== 'all' || currentFilter.project_id !== 'all' || !currentFilter.show_subtasks
           ? t('taskList.changeFilterPrompt')
           : t('taskList.addTaskPrompt')}
       </Text>
-      {(!currentFilter.searchQuery && currentFilter.status === 'all' && currentFilter.priority === 'all' && currentFilter.category_id === 'all') && (
+      {(!currentFilter.searchQuery && currentFilter.status === 'all' && currentFilter.priority === 'all' && 
+        currentFilter.category_id === 'all' && currentFilter.project_id === 'all' && currentFilter.show_subtasks) && (
           <Button
             title={t('taskList.addFirstTask')}
             style={{ marginTop: spacing.lg }}

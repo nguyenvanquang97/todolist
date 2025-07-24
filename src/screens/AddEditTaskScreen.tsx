@@ -9,6 +9,7 @@ import {
   FlatList,
   Modal,
   StyleSheet,
+  Switch,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
@@ -17,7 +18,8 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import moment from 'moment';
 import { RootStackParamList } from '@navigation/RootStackNavigator';
 import { useTaskContext } from '@context/TaskContext';
-import { Task, Category, Tag } from '../types/Task';
+import { useProjectContext } from '@context/ProjectContext';
+import { Task, Category, Tag, Project } from '../types/Task';
 import LoadingSpinner from '@components/LoadingSpinner';
 import Button from '@components/Button';
 import { globalStyles } from '@styles/globalStyles';
@@ -42,10 +44,13 @@ interface Props {
 
 const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
   const { mode, task } = route.params;
-  const { addTask, updateTask, loading, categories, tags, getTagsForTask } = useTaskContext();
-  const { colors } = useTheme();
-  const { t } = useTranslation();
-  const {addTagToTask,removeTagFromTask} = useTaskContext();
+  const projectId = task?.project_id;
+  const parentTaskId = task?.parent_task_id;
+  const { addTask, updateTask, loading, categories, tags, getTagsForTask, projects, getSubtasks, tasks } = useTaskContext();
+  const { updateTaskProject } = useProjectContext();
+const { colors } = useTheme();
+const { t } = useTranslation();
+  const { addTagToTask, removeTagFromTask } = useTaskContext();
   const [title, setTitle] = useState(task?.title || '');
   const [description, setDescription] = useState(task?.description || '');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>(task?.priority || 'medium');
@@ -55,9 +60,16 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
-  const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
-  const [showCategoryModal, setShowCategoryModal] = useState(false);
-  const [showTagModal, setShowTagModal] = useState(false);
+const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
+const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+const [selectedParentTask, setSelectedParentTask] = useState<Task | null>(null);
+const [isSubtask, setIsSubtask] = useState<boolean>(!!parentTaskId);
+const [availableParentTasks, setAvailableParentTasks] = useState<Task[]>([]);
+
+const [showCategoryModal, setShowCategoryModal] = useState(false);
+const [showTagModal, setShowTagModal] = useState(false);
+const [showProjectModal, setShowProjectModal] = useState(false);
+const [showParentTaskModal, setShowParentTaskModal] = useState(false);
   
   const isEditMode = mode === 'edit';
 
@@ -94,6 +106,9 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
         priority,
         due_date: dueDate ? moment(dueDate).format('YYYY-MM-DD HH:mm:ss') : undefined,
         category_id: selectedCategory?.id,
+        project_id: selectedProject?.id,
+        parent_task_id: isSubtask ? selectedParentTask?.id : undefined,
+        completion_percentage: 0,
       };
 
       if (isEditMode && task) {
@@ -134,8 +149,8 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
         const newTaskId = await addTask({
           ...taskData,
           status: 'pending',
-          createdAt: moment().format('YYYY-MM-DD HH:mm:ss'),
-          updatedAt: moment().format('YYYY-MM-DD HH:mm:ss'),
+          created_at: moment().format('YYYY-MM-DD HH:mm:ss'),
+          updated_at: moment().format('YYYY-MM-DD HH:mm:ss'),
         } as Task);
         
         // Thêm tags cho task mới nếu có newTaskId và selectedTags
@@ -174,7 +189,43 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
     });
   }, [navigation, isEditMode, loading, title, description, priority, dueDate, handleSave, t]);
   
-  // Load category and tags if in edit mode
+  // Load available parent tasks (non-subtasks)
+  useEffect(() => {
+    const loadAvailableParentTasks = async () => {
+      try {
+        // Filter tasks that are not subtasks themselves
+        const nonSubtasks = tasks.filter(t => !t.parent_task_id && t.id !== task?.id);
+        setAvailableParentTasks(nonSubtasks);
+      } catch (error) {
+        console.error('Failed to load available parent tasks', error);
+      }
+    };
+    
+    loadAvailableParentTasks();
+  }, [tasks, task]);
+
+  // Set initial project if projectId is provided
+  useEffect(() => {
+    if (projectId && !isEditMode) {
+      const project = projects.find(p => p.id === projectId);
+      if (project) {
+        setSelectedProject(project);
+      }
+    }
+  }, [projectId, projects, isEditMode]);
+
+  // Set initial parent task if parentTaskId is provided
+  useEffect(() => {
+    if (parentTaskId && !isEditMode) {
+      const parentTask = tasks.find(t => t.id === parentTaskId);
+      if (parentTask) {
+        setSelectedParentTask(parentTask);
+        setIsSubtask(true);
+      }
+    }
+  }, [parentTaskId, tasks, isEditMode]);
+
+  // Load category, tags, project, and parent task if in edit mode
   useEffect(() => {
     if (isEditMode && task) {
       // Load category
@@ -182,6 +233,23 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
         const category = categories.find(c => c.id === task.category_id);
         if (category) {
           setSelectedCategory(category);
+        }
+      }
+      
+      // Load project
+      if (task.project_id) {
+        const project = projects.find(p => p.id === task.project_id);
+        if (project) {
+          setSelectedProject(project);
+        }
+      }
+      
+      // Load parent task
+      if (task.parent_task_id) {
+        const parentTask = tasks.find(t => t.id === task.parent_task_id);
+        if (parentTask) {
+          setSelectedParentTask(parentTask);
+          setIsSubtask(true);
         }
       }
       
@@ -408,6 +476,101 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
           </TouchableOpacity>
         </View>
 
+        {/* Project Selection */}
+        <View style={globalStyles.inputGroup}>
+          <Text style={globalStyles.label}>{t('taskDetail.project')}</Text>
+          <TouchableOpacity
+            style={[{
+              backgroundColor: colors.surface,
+              borderRadius: borderRadius.md,
+              paddingVertical: spacing.md,
+              paddingHorizontal: spacing.md,
+              borderWidth: 1,
+              borderColor: colors.border,
+              flexDirection: 'row',
+              alignItems: 'center',
+            }]}
+            onPress={() => setShowProjectModal(true)}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: spacing.sm }}>
+              {selectedProject ? (
+                <>
+                  <View style={[{ width: 16, height: 16, borderRadius: 8 }, { backgroundColor: selectedProject.color }]} />
+                  <Text style={{ fontSize: fonts.sizes?.md || 16, color: colors.text }}>
+                    {selectedProject.name}
+                  </Text>
+                </>
+              ) : (
+                <>
+                  <Icon name="briefcase-outline" size={20} color={colors.textSecondary} />
+                  <Text style={{ fontSize: fonts.sizes?.md || 16, color: colors.textDisabled }}>
+                    {t('taskDetail.project')}
+                  </Text>
+                </>
+              )}
+            </View>
+            {selectedProject && (
+              <TouchableOpacity onPress={() => setSelectedProject(null)}>
+                <Icon name="close-circle" size={20} color={colors.textDisabled} />
+              </TouchableOpacity>
+            )}
+          </TouchableOpacity>
+        </View>
+
+        {/* Subtask Toggle */}
+        <View style={[globalStyles.inputGroup, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
+          <Text style={globalStyles.label}>{t('taskDetail.subtasks')}</Text>
+          <Switch
+            value={isSubtask}
+            onValueChange={setIsSubtask}
+            trackColor={{ false: colors.border, true: colors.primary + '80' }}
+            thumbColor={isSubtask ? colors.primary : colors.textDisabled}
+          />
+        </View>
+
+        {/* Parent Task Selection (only visible if isSubtask is true) */}
+        {isSubtask && (
+          <View style={globalStyles.inputGroup}>
+            <Text style={globalStyles.label}>{t('taskDetail.parentTask')}</Text>
+            <TouchableOpacity
+              style={[{
+                backgroundColor: colors.surface,
+                borderRadius: borderRadius.md,
+                paddingVertical: spacing.md,
+                paddingHorizontal: spacing.md,
+                borderWidth: 1,
+                borderColor: colors.border,
+                flexDirection: 'row',
+                alignItems: 'center',
+              }]}
+              onPress={() => setShowParentTaskModal(true)}
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: spacing.sm }}>
+                {selectedParentTask ? (
+                  <>
+                    <Icon name="list" size={20} color={colors.primary} />
+                    <Text style={{ fontSize: fonts.sizes?.md || 16, color: colors.text }}>
+                      {selectedParentTask.title}
+                    </Text>
+                  </>
+                ) : (
+                  <>
+                    <Icon name="list-outline" size={20} color={colors.textSecondary} />
+                    <Text style={{ fontSize: fonts.sizes?.md || 16, color: colors.textDisabled }}>
+                      {t('taskDetail.parentTask')}
+                    </Text>
+                  </>
+                )}
+              </View>
+              {selectedParentTask && (
+                <TouchableOpacity onPress={() => setSelectedParentTask(null)}>
+                  <Icon name="close-circle" size={20} color={colors.textDisabled} />
+                </TouchableOpacity>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Tags Selection */}
         <View style={globalStyles.inputGroup}>
           <Text style={globalStyles.label}>{t('addEditTask.tagsLabel')}</Text>
@@ -533,7 +696,7 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
               style={[styles.closeButton, { backgroundColor: colors.primary }]}
               onPress={() => setShowCategoryModal(false)}
             >
-              <Text style={styles.closeButtonText}>{t('common.close' as TranslationKey)}</Text>
+              <Text style={styles.closeButtonText}>{t('common.close')}</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -597,7 +760,123 @@ const AddEditTaskScreen: React.FC<Props> = ({ navigation, route }) => {
               style={[styles.closeButton, { backgroundColor: colors.primary }]}
               onPress={() => setShowTagModal(false)}
             >
-              <Text style={styles.closeButtonText}>{t('common.done' as TranslationKey)}</Text>
+              <Text style={styles.closeButtonText}>{t('common.done')}</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Project Selection Modal */}
+      <Modal
+        visible={showProjectModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowProjectModal(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowProjectModal(false)}
+        >
+          <View
+            style={[styles.modalContent, { backgroundColor: colors.card }]}
+            onStartShouldSetResponder={() => true}
+            onTouchEnd={(e) => e.stopPropagation()}
+          >
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              {t('taskDetail.project')}
+            </Text>
+            
+            <FlatList
+              data={projects}
+              keyExtractor={(item) => item.id !== undefined ? item.id.toString() : 'temp-' + item.name}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[styles.projectOption, selectedProject?.id === item.id && styles.selectedOption]}
+                  onPress={() => {
+                    setSelectedProject(item);
+                    setShowProjectModal(false);
+                  }}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <View style={[{ width: 16, height: 16, borderRadius: 8, marginRight: spacing.sm }, { backgroundColor: item.color }]} />
+                    <Text style={[styles.optionText, { color: colors.text }]}>{item.name}</Text>
+                  </View>
+                  {selectedProject?.id === item.id && (
+                    <Icon name="checkmark" size={20} color={colors.primary} />
+                  )}
+                </TouchableOpacity>
+              )}
+              ListEmptyComponent={
+                <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+                  {t('taskList.allProjects')}
+                </Text>
+              }
+            />
+            
+            <TouchableOpacity
+              style={[styles.closeButton, { backgroundColor: colors.primary }]}
+              onPress={() => setShowProjectModal(false)}
+            >
+              <Text style={styles.closeButtonText}>{t('common.close')}</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* Parent Task Selection Modal */}
+      <Modal
+        visible={showParentTaskModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowParentTaskModal(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowParentTaskModal(false)}
+        >
+          <View
+            style={[styles.modalContent, { backgroundColor: colors.card }]}
+            onStartShouldSetResponder={() => true}
+            onTouchEnd={(e) => e.stopPropagation()}
+          >
+            <Text style={[styles.modalTitle, { color: colors.text }]}>
+              {t('taskDetail.parentTask')}
+            </Text>
+            
+            <FlatList
+              data={availableParentTasks}
+              keyExtractor={(item) => item.id !== undefined ? item.id.toString() : 'temp-' + item.title}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={[styles.taskOption, selectedParentTask?.id === item.id && styles.selectedOption]}
+                  onPress={() => {
+                    setSelectedParentTask(item);
+                    setShowParentTaskModal(false);
+                  }}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Icon name="list" size={20} color={colors.primary} style={{ marginRight: spacing.sm }} />
+                    <Text style={[styles.optionText, { color: colors.text }]} numberOfLines={1}>{item.title}</Text>
+                  </View>
+                  {selectedParentTask?.id === item.id && (
+                    <Icon name="checkmark" size={20} color={colors.primary} />
+                  )}
+                </TouchableOpacity>
+              )}
+              ListEmptyComponent={
+                <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+                  {t('taskDetail.noSubtasks')}
+                </Text>
+              }
+            />
+            
+            <TouchableOpacity
+              style={[styles.closeButton, { backgroundColor: colors.primary }]}
+              onPress={() => setShowParentTaskModal(false)}
+            >
+              <Text style={styles.closeButtonText}>{t('common.close')}</Text>
             </TouchableOpacity>
           </View>
         </TouchableOpacity>
@@ -636,6 +915,24 @@ const styles = StyleSheet.create({
     borderBottomColor: 'rgba(0,0,0,0.1)',
   },
   tagOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.1)',
+  },
+  projectOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,0,0,0.1)',
+  },
+  taskOption: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',

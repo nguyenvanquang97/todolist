@@ -8,6 +8,9 @@ export interface Task {
   created_at?: string;
   updated_at?: string;
   category_id?: number;
+  project_id?: number;
+  parent_task_id?: number;
+  completion_percentage?: number;
 }
 
 export interface Category {
@@ -35,6 +38,8 @@ export interface TaskFilter {
   priority?: 'low' | 'medium' | 'high' | 'all';
   searchQuery?: string;
   category_id?: string | number | 'all' | 'none';
+  project_id?: string | number | 'all' | 'none';
+  show_subtasks?: boolean;
 }
 
 export interface DatabaseResult {
@@ -46,6 +51,7 @@ export interface TaskContextType {
   tasks: Task[];
   categories: Category[];
   tags: Tag[];
+  projects: Project[];
   loading: boolean;
   error: string | null;
   loadTasks: () => Promise<void>;
@@ -67,6 +73,26 @@ export interface TaskContextType {
   getTagsForTask: (taskId: number) => Promise<Tag[]>;
   addTagToTask: (taskId: number, tagId: number) => Promise<void>;
   removeTagFromTask: (taskId: number, tagId: number) => Promise<void>;
+  // Project methods
+  loadProjects: () => Promise<void>;
+  addProject: (project: Omit<Project, 'id' | 'created_at'>) => Promise<number | null>;
+  updateProject: (id: number, project: Partial<Project>) => Promise<void>;
+  deleteProject: (id: number) => Promise<void>;
+  updateTaskProject: (taskId: number, projectId: number | null) => Promise<void>;
+  // Subtask methods
+  getSubtasks: (parentTaskId: number) => Promise<Task[]>;
+  updateTaskCompletion: (taskId: number, completionPercentage: number) => Promise<void>;
+}
+
+export interface Project {
+  id?: number;
+  name: string;
+  description?: string;
+  start_date?: string;
+  end_date?: string;
+  status: 'not_started' | 'in_progress' | 'completed' | 'on_hold';
+  color: string;
+  created_at?: string;
 }
 
 export interface AppSettings {

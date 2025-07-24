@@ -166,7 +166,24 @@ export type TranslationKey =
   | 'addEditTask.tagsSelected'
   | 'common.close'
   | 'common.done'
-  | 'addEditTask.noCategories';
+  | 'addEditTask.noCategories'
+  | 'taskList.filterProject'
+  | 'taskList.filterSubtasks'
+  | 'taskList.showAllTasks'
+  | 'taskList.hideSubtasks'
+  | 'taskList.allProjects'
+  | 'taskList.noProject'
+  | 'taskDetail.project'
+  | 'taskDetail.noProject'
+  | 'taskDetail.parentTask'
+  | 'taskDetail.subtasks'
+  | 'taskDetail.addSubtask'
+  | 'taskDetail.noSubtasks'
+  | 'taskDetail.progress'
+  | 'taskItem.subtasks'
+  | 'taskItem.parentTask'
+  | 'taskItem.project'
+  | 'taskItem.complete';
 
 export type Translations = {
   [key in TranslationKey]: string;

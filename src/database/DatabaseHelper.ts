@@ -45,7 +45,10 @@ class DatabaseHelper {
         priority TEXT,
         status TEXT,
         created_at TEXT,
-        category_id INTEGER
+        category_id INTEGER,
+        project_id INTEGER,
+        parent_task_id INTEGER,
+        completion_percentage INTEGER DEFAULT 0
       );
     `;
 
@@ -88,12 +91,26 @@ class DatabaseHelper {
       );
     `;
 
+    const createProjectsTableQuery = `
+      CREATE TABLE IF NOT EXISTS projects (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        description TEXT,
+        start_date TEXT,
+        end_date TEXT,
+        status TEXT NOT NULL,
+        color TEXT,
+        created_at TEXT NOT NULL
+      );
+    `;
+
     try {
       await this.database?.executeSql(createTasksTableQuery);
       await this.database?.executeSql(createSettingsTableQuery);
       await this.database?.executeSql(createCategoriesTableQuery);
       await this.database?.executeSql(createTagsTableQuery);
       await this.database?.executeSql(createTaskTagsTableQuery);
+      await this.database?.executeSql(createProjectsTableQuery);
       console.log('Database tables created successfully');
 
       // Initialize settings if not exists
@@ -707,6 +724,227 @@ class DatabaseHelper {
       console.error('Error getting tasks by tag:', error);
       throw error;
     }
+  }
+
+  // Project methods
+  public async insertProject(project: Omit<Project, 'id'>): Promise<DatabaseResult> {
+    const insertQuery = `
+      INSERT INTO projects (name, description, start_date, end_date, status, color, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?);
+    `;
+
+    const values = [
+      project.name,
+      project.description || null,
+      project.start_date || null,
+      project.end_date || null,
+      project.status,
+      project.color || null,
+      project.created_at || new Date().toISOString(),
+    ];
+
+    try {
+      const result = await this.database?.executeSql(insertQuery, values);
+      return {
+        insertId: result?.[0].insertId,
+        rowsAffected: result?.[0].rowsAffected || 0,
+      };
+    } catch (error) {
+      console.error('Error inserting project:', error);
+      throw error;
+    }
+  }
+
+  public async getAllProjects(): Promise<Project[]> {
+    const selectQuery = 'SELECT * FROM projects ORDER BY created_at DESC;';
+
+    try {
+      const result = await this.database?.executeSql(selectQuery);
+      const projects: Project[] = [];
+
+      if (result && result[0].rows.length > 0) {
+        for (let i = 0; i < result[0].rows.length; i++) {
+          projects.push(result[0].rows.item(i));
+        }
+      }
+
+      return projects;
+    } catch (error) {
+      console.error('Error getting all projects:', error);
+      throw error;
+    }
+  }
+
+  public async getProject(id: number): Promise<Project | null> {
+    const selectQuery = 'SELECT * FROM projects WHERE id = ?;';
+
+    try {
+      const result = await this.database?.executeSql(selectQuery, [id]);
+
+      if (result && result[0].rows.length > 0) {
+        return result[0].rows.item(0);
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error getting project:', error);
+      throw error;
+    }
+  }
+
+  public async updateProject(id: number, project: Partial<Project>): Promise<DatabaseResult> {
+    const updateFields: string[] = [];
+    const values: any[] = [];
+
+    Object.entries(project).forEach(([key, value]) => {
+      if (key !== 'id' && key !== 'created_at' && value !== undefined) {
+        updateFields.push(`${key} = ?`);
+        values.push(value);
+      }
+    });
+
+    if (updateFields.length === 0) {
+      throw new Error('No fields to update');
+    }
+
+    const updateQuery = `UPDATE projects SET ${updateFields.join(', ')} WHERE id = ?;`;
+    values.push(id);
+
+    try {
+      const result = await this.database?.executeSql(updateQuery, values);
+      return {
+        rowsAffected: result?.[0].rowsAffected || 0,
+      };
+    } catch (error) {
+      console.error('Error updating project:', error);
+      throw error;
+    }
+  }
+
+  public async deleteProject(id: number): Promise<DatabaseResult> {
+    // First, update all tasks that use this project to have null project_id
+    const updateTasksQuery = 'UPDATE tasks SET project_id = NULL WHERE project_id = ?;';
+    
+    // Then delete the project
+    const deleteProjectQuery = 'DELETE FROM projects WHERE id = ?;';
+
+    try {
+      // Start a transaction
+      await this.database?.executeSql('BEGIN TRANSACTION;');
+      
+      // Update tasks
+      await this.database?.executeSql(updateTasksQuery, [id]);
+      
+      // Delete project
+      const result = await this.database?.executeSql(deleteProjectQuery, [id]);
+      
+      // Commit the transaction
+      await this.database?.executeSql('COMMIT;');
+      
+      return {
+        rowsAffected: result?.[0].rowsAffected || 0,
+      };
+    } catch (error) {
+      // Rollback in case of error
+      await this.database?.executeSql('ROLLBACK;');
+      console.error('Error deleting project:', error);
+      throw error;
+    }
+  }
+
+  public async getTasksByProject(projectId: number): Promise<Task[]> {
+    const selectQuery = 'SELECT * FROM tasks WHERE project_id = ? ORDER BY created_at DESC;';
+
+    try {
+      const result = await this.database?.executeSql(selectQuery, [projectId]);
+      const tasks: Task[] = [];
+
+      if (result && result[0].rows.length > 0) {
+        for (let i = 0; i < result[0].rows.length; i++) {
+          tasks.push(result[0].rows.item(i));
+        }
+      }
+
+      return tasks;
+    } catch (error) {
+      console.error('Error getting tasks by project:', error);
+      throw error;
+    }
+  }
+
+  public async updateTaskProject(taskId: number, projectId: number | null): Promise<DatabaseResult> {
+    const updateQuery = 'UPDATE tasks SET project_id = ? WHERE id = ?;';
+
+    try {
+      const result = await this.database?.executeSql(updateQuery, [projectId, taskId]);
+      return {
+        rowsAffected: result?.[0].rowsAffected || 0,
+      };
+    } catch (error) {
+      console.error('Error updating task project:', error);
+      throw error;
+    }
+  }
+
+  // Subtask methods
+  public async getSubtasks(parentTaskId: number): Promise<Task[]> {
+    const selectQuery = 'SELECT * FROM tasks WHERE parent_task_id = ? ORDER BY created_at ASC;';
+
+    try {
+      const result = await this.database?.executeSql(selectQuery, [parentTaskId]);
+      const subtasks: Task[] = [];
+
+      if (result && result[0].rows.length > 0) {
+        for (let i = 0; i < result[0].rows.length; i++) {
+          subtasks.push(result[0].rows.item(i));
+        }
+      }
+
+      return subtasks;
+    } catch (error) {
+      console.error('Error getting subtasks:', error);
+      throw error;
+    }
+  }
+
+  public async updateTaskCompletion(taskId: number, completionPercentage: number): Promise<DatabaseResult> {
+    const updateQuery = 'UPDATE tasks SET completion_percentage = ? WHERE id = ?;';
+
+    try {
+      const result = await this.database?.executeSql(updateQuery, [completionPercentage, taskId]);
+      return {
+        rowsAffected: result?.[0].rowsAffected || 0,
+      };
+    } catch (error) {
+      console.error('Error updating task completion:', error);
+      throw error;
+    }
+  }
+
+  public async calculateParentCompletion(parentTaskId: number): Promise<number> {
+    // Get all subtasks for the parent task
+    const subtasks = await this.getSubtasks(parentTaskId);
+    
+    if (subtasks.length === 0) {
+      return 0;
+    }
+    
+    // Calculate the average completion percentage
+    const totalCompletion = subtasks.reduce((sum, task) => {
+      // If the task is completed, count it as 100%
+      if (task.status === 'completed') {
+        return sum + 100;
+      }
+      // Otherwise use the completion_percentage or 0 if not set
+      return sum + (task.completion_percentage || 0);
+    }, 0);
+    
+    const averageCompletion = Math.round(totalCompletion / subtasks.length);
+    
+    // Update the parent task's completion percentage
+    await this.updateTaskCompletion(parentTaskId, averageCompletion);
+    
+    return averageCompletion;
   }
 
   public async closeDatabase(): Promise<void> {

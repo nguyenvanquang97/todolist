@@ -169,6 +169,24 @@ const vi: Translations = {
   'common.close': 'Đóng',
   'common.done': 'Xong',
   'addEditTask.noCategories': 'Không có danh mục nào',
+  'taskList.filterProject': 'Dự án',
+  'taskList.filterSubtasks': 'Công việc con',
+  'taskList.showAllTasks': 'Hiển thị tất cả công việc',
+  'taskList.hideSubtasks': 'Ẩn công việc con',
+  'taskList.allProjects': 'Tất cả dự án',
+  'taskList.noProject': 'Không có dự án',
+  'taskDetail.project': 'Dự án',
+  'taskDetail.noProject': 'Không có dự án',
+  'taskDetail.parentTask': 'Công việc cha',
+  'taskDetail.subtasks': 'Công việc con',
+  'taskDetail.addSubtask': 'Thêm công việc con',
+  'taskDetail.noSubtasks': 'Chưa có công việc con',
+  'taskDetail.progress': 'Tiến độ',
+  'taskItem.subtasks': 'công việc con',
+  'taskItem.parentTask': 'Công việc cha:',
+  'taskItem.project': 'Dự án:',
+  'taskItem.complete': 'hoàn thành',
 };
+
 
 export default vi;

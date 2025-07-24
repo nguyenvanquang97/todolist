@@ -7,6 +7,7 @@ import {spacing, borderRadius, fonts, baseColors} from '@styles/theme';
 import {useTheme} from '@context/ThemeContext';
 import {useTranslation} from '@i18n/i18n';
 import {useTaskContext} from '@context/TaskContext';
+import {useProjectContext} from '@context/ProjectContext';
 
 export interface TaskItemProps {
   task: Task;
@@ -23,7 +24,19 @@ const TaskItem: React.FC<TaskItemProps> = ({
 }) => {
   const {colors} = useTheme();
   const {t} = useTranslation();
-  const {categories} = useTaskContext();
+  const {categories, getSubtasks} = useTaskContext();
+  const {projects} = useProjectContext();
+  const [subtasks, setSubtasks] = React.useState<Task[]>([]);
+  
+  React.useEffect(() => {
+    if (task.id) {
+      const loadSubtasks = async () => {
+        const tasks = await getSubtasks(task.id!);
+        setSubtasks(tasks);
+      };
+      loadSubtasks();
+    }
+  }, [task.id, getSubtasks]);
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
@@ -232,6 +245,77 @@ const TaskItem: React.FC<TaskItemProps> = ({
               }
               return null;
             })}
+            
+          {/* Project Badge */}
+          {task.project_id &&
+            projects.map(project => {
+              if (project.id === task.project_id) {
+                return (
+                  <View
+                    key={project.id}
+                    style={[
+                      styles.projectBadge,
+                      {backgroundColor: project.color + '20'},
+                    ]}>
+                    <Icon name="folder-outline" size={12} color={project.color} />
+                    <Text
+                      style={[styles.projectText, {color: project.color}]}
+                      numberOfLines={1}>
+                      {project.name}
+                    </Text>
+                  </View>
+                );
+              }
+              return null;
+            })}
+            
+          {/* Parent Task Badge */}
+          {task.parent_task_id && (
+            <View
+              style={[
+                styles.subtaskBadge,
+                {backgroundColor: colors.primary + '20'},
+              ]}>
+              <Icon name="git-branch-outline" size={12} color={colors.primary} />
+              <Text
+                style={[styles.subtaskText, {color: colors.primary}]}
+                numberOfLines={1}>
+                {t('taskItem.subtask')}
+              </Text>
+            </View>
+          )}
+          
+          {/* Subtasks Badge */}
+          {subtasks.length > 0 && (
+            <View
+              style={[
+                styles.subtaskBadge,
+                {backgroundColor: colors.info + '20'},
+              ]}>
+              <Icon name="git-network-outline" size={12} color={colors.info} />
+              <Text
+                style={[styles.subtaskText, {color: colors.info}]}
+                numberOfLines={1}>
+                {t('taskItem.hasSubtasks', {count: subtasks.length})}
+              </Text>
+            </View>
+          )}
+          
+          {/* Completion Percentage */}
+          {task.completion_percentage !== undefined && task.completion_percentage > 0 && (
+            <View
+              style={[
+                styles.progressBadge,
+                {backgroundColor: colors.success + '20'},
+              ]}>
+              <Icon name="pie-chart-outline" size={12} color={colors.success} />
+              <Text
+                style={[styles.progressText, {color: colors.success}]}
+                numberOfLines={1}>
+                {task.completion_percentage}%
+              </Text>
+            </View>
+          )}
         </View>
       </View>
     </TouchableOpacity>
@@ -334,6 +418,44 @@ const styles = StyleSheet.create({
     fontSize: fonts.sizes.xs,
     fontWeight: '600' as const,
     maxWidth: 80,
+  },
+  projectBadge: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+  },
+  projectText: {
+    fontSize: fonts.sizes.xs,
+    fontWeight: '600' as const,
+    maxWidth: 80,
+    marginLeft: spacing.xs,
+  },
+  subtaskBadge: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+  },
+  subtaskText: {
+    fontSize: fonts.sizes.xs,
+    fontWeight: '600' as const,
+    maxWidth: 80,
+    marginLeft: spacing.xs,
+  },
+  progressBadge: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+  },
+  progressText: {
+    fontSize: fonts.sizes.xs,
+    fontWeight: '600' as const,
+    marginLeft: spacing.xs,
   },
   dueDateContainer: {
     flexDirection: 'row' as const,

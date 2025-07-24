@@ -169,6 +169,24 @@ const en: Translations = {
   'common.done': 'Done',
   'addEditTask.noCategories': 'No categories available',
   'taskList.filterCategory': 'Category',
+  'taskList.filterProject': 'Project',
+  'taskList.filterSubtasks': 'Subtasks',
+  'taskList.showAllTasks': 'Show all tasks',
+  'taskList.hideSubtasks': 'Hide subtasks',
+  'taskList.allProjects': 'All Projects',
+  'taskList.noProject': 'No Project',
+  'taskDetail.project': 'Project',
+  'taskDetail.noProject': 'No Project',
+  'taskDetail.parentTask': 'Parent Task',
+  'taskDetail.subtasks': 'Subtasks',
+  'taskDetail.addSubtask': 'Add Subtask',
+  'taskDetail.noSubtasks': 'No subtasks yet',
+  'taskDetail.progress': 'Progress',
+  'taskItem.subtasks': 'subtasks',
+  'taskItem.parentTask': 'Parent:',
+  'taskItem.project': 'Project:',
+  'taskItem.complete': 'complete',
 };
+
 
 export default en;

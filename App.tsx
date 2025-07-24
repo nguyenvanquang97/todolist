@@ -4,6 +4,7 @@ import {NavigationContainer, DefaultTheme, DarkTheme} from '@react-navigation/na
 import {TaskProvider} from './src/context/TaskContext';
 import {ThemeProvider, useTheme} from './src/context/ThemeContext';
 import {SettingsProvider} from './src/context/SettingsContext';
+import {ProjectProvider} from './src/context/ProjectContext';
 import notifee from '@notifee/react-native';
 import {RootStackNavigator, navigationRef} from '@/navigation/index';
 import changeNavigationBarColor from 'react-native-navigation-bar-color';
@@ -104,7 +105,9 @@ const App: React.FC = () => {
     <SettingsProvider>
       <ThemeProvider>
         <TaskProvider>
-          <AppContent />
+          <ProjectProvider>
+            <AppContent />
+          </ProjectProvider>
         </TaskProvider>
       </ThemeProvider>
     </SettingsProvider>
