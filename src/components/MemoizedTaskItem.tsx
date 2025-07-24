@@ -15,7 +15,10 @@ const MemoizedTaskItem = memo(
       prevProps.task.status === nextProps.task.status &&
       prevProps.task.priority === nextProps.task.priority &&
       prevProps.task.due_date === nextProps.task.due_date &&
-      prevProps.task.category_id === nextProps.task.category_id
+      prevProps.task.category_id === nextProps.task.category_id &&
+      prevProps.task.project_id === nextProps.task.project_id &&
+      prevProps.task.parent_task_id === nextProps.task.parent_task_id &&
+      prevProps.task.completion_percentage === nextProps.task.completion_percentage
     );
   }
 );

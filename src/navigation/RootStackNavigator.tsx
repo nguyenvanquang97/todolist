@@ -9,6 +9,7 @@ import TaskDetailScreen from '@screens/TaskDetailScreen';
 import CategoryManagementScreen from '@screens/CategoryManagementScreen';
 import TagManagementScreen from '@screens/TagManagementScreen';
 import CategoryTagManagementScreen from '@screens/CategoryTagManagementScreen';
+import ProjectManagementScreen from '@screens/ProjectManagementScreen';
 import {useTheme} from '@context/ThemeContext';
 import {baseColors} from '@styles/theme';
 import {useTranslation} from '@i18n/i18n';
@@ -28,6 +29,7 @@ export type RootStackParamList = {
   CategoryTagManagement: undefined;
   CategoryManagement: undefined;
   TagManagement: undefined;
+  ProjectManagement: undefined;
 };
 
 const RootStack = createStackNavigator<RootStackParamList>();
@@ -92,6 +94,13 @@ const RootStackNavigator: React.FC = () => {
         component={TagManagementScreen}
         options={{
           title: t('tagManagement.title'),
+        }}
+      />
+      <RootStack.Screen
+        name="ProjectManagement"
+        component={ProjectManagementScreen}
+        options={{
+          title: t('projectManagement.title'),
         }}
       />
     </RootStack.Navigator>

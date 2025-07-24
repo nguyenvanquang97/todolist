@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, TextInput } from 'react-native';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { useProjectContext } from '@context/ProjectContext';
 import { useTheme } from '@context/ThemeContext';
@@ -7,7 +7,7 @@ import Button from '@components/Button';
 import LoadingSpinner from '@components/LoadingSpinner';
 import ColorPicker from '@components/ColorPicker';
 import { Project } from '../types/Task';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '../i18n/i18n';
 
 const ProjectManagementScreen: React.FC = () => {
   const { t } = useTranslation();
@@ -27,9 +27,9 @@ const ProjectManagementScreen: React.FC = () => {
 
   useEffect(() => {
     loadProjects();
-  }, [loadProjects]);
+  }, []);
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setProjectName('');
     setProjectDescription('');
     setProjectColor('#3498db');
@@ -39,9 +39,9 @@ const ProjectManagementScreen: React.FC = () => {
     setIsAddMode(false);
     setIsEditMode(false);
     setSelectedProject(null);
-  };
+  }, []);
 
-  const handleAddProject = async () => {
+  const handleAddProject = useCallback(async () => {
     if (!projectName.trim()) {
       Alert.alert(t('error'), t('project_name_required'));
       return;
@@ -58,9 +58,9 @@ const ProjectManagementScreen: React.FC = () => {
 
     await addProject(newProject);
     resetForm();
-  };
+  }, [projectName, projectDescription, startDate, endDate, projectStatus, projectColor, addProject, resetForm, t]);
 
-  const handleEditProject = async () => {
+  const handleEditProject = useCallback(async () => {
     if (!selectedProject || !projectName.trim()) {
       Alert.alert(t('error'), t('project_name_required'));
       return;
@@ -77,9 +77,9 @@ const ProjectManagementScreen: React.FC = () => {
 
     await updateProject(selectedProject.id!, updatedProject);
     resetForm();
-  };
+  }, [selectedProject, projectName, projectDescription, startDate, endDate, projectStatus, projectColor, updateProject, resetForm, t]);
 
-  const handleDeleteProject = (project: Project) => {
+  const handleDeleteProject = useCallback((project: Project) => {
     Alert.alert(
       t('delete_project'),
       t('delete_project_confirmation', { name: project.name }),
@@ -96,9 +96,9 @@ const ProjectManagementScreen: React.FC = () => {
         },
       ],
     );
-  };
+  }, [t, deleteProject]);
 
-  const handleSelectProject = (project: Project) => {
+  const handleSelectProject = useCallback((project: Project) => {
     setSelectedProject(project);
     setProjectName(project.name);
     setProjectDescription(project.description || '');
@@ -107,9 +107,9 @@ const ProjectManagementScreen: React.FC = () => {
     setStartDate(project.start_date);
     setEndDate(project.end_date);
     setIsEditMode(true);
-  };
+  }, []);
 
-  const renderProjectItem = ({ item }: { item: Project }) => {
+  const renderProjectItem = useCallback(({ item }: { item: Project }) => {
     return (
       <TouchableOpacity
         style={[styles.projectItem, { backgroundColor: colors.card }]}
@@ -135,7 +135,7 @@ const ProjectManagementScreen: React.FC = () => {
         </TouchableOpacity>
       </TouchableOpacity>
     );
-  };
+  }, [colors, t, handleSelectProject, handleDeleteProject]);
 
   if (loading) {
     return <LoadingSpinner />;
@@ -153,8 +153,59 @@ const ProjectManagementScreen: React.FC = () => {
             {isAddMode ? t('add_project') : t('edit_project')}
           </Text>
           
-          {/* Project form fields would go here */}
-          {/* This is a simplified version - you would add TextInput, DatePicker, etc. */}
+          <View style={styles.inputContainer}>
+            <Text style={[styles.label, { color: colors.text }]}>{t('project_name')} *</Text>
+            <TextInput
+              style={[styles.input, { backgroundColor: colors.card, color: colors.text }]}
+              placeholder={t('enter_project_name')}
+              placeholderTextColor={colors.text + '80'}
+              value={projectName}
+              onChangeText={setProjectName}
+            />
+          </View>
+          
+          <View style={styles.inputContainer}>
+            <Text style={[styles.label, { color: colors.text }]}>{t('project_description')}</Text>
+            <TextInput
+              style={[styles.input, { backgroundColor: colors.card, color: colors.text, height: 80 }]}
+              placeholder={t('enter_project_description')}
+              placeholderTextColor={colors.text + '80'}
+              value={projectDescription}
+              onChangeText={setProjectDescription}
+              multiline
+              textAlignVertical="top"
+            />
+          </View>
+          
+          <View style={styles.inputContainer}>
+            <Text style={[styles.label, { color: colors.text }]}>{t('project_status')}</Text>
+            <View style={styles.statusContainer}>
+              {['not_started', 'in_progress', 'completed', 'on_hold'].map((status) => (
+                <TouchableOpacity
+                  key={status}
+                  style={[
+                    styles.statusOption,
+                    { borderColor: colors.border },
+                    projectStatus === status && { backgroundColor: projectColor + '40', borderColor: projectColor }
+                  ]}
+                  onPress={() => setProjectStatus(status as Project['status'])}
+                >
+                  <Text 
+                    style={[
+                      styles.statusText, 
+                      { color: colors.text },
+                      projectStatus === status && { color: projectColor }
+                    ]}
+                  >
+                    {status === 'not_started' && t('project_status_not_started')}
+                    {status === 'in_progress' && t('project_status_in_progress')}
+                    {status === 'completed' && t('project_status_completed')}
+                    {status === 'on_hold' && t('project_status_on_hold')}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
           
           <View style={styles.colorPickerContainer}>
             <Text style={[styles.label, { color: colors.text }]}>{t('color')}</Text>
@@ -265,6 +316,32 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 16,
     textAlign: 'center',
+  },
+  inputContainer: {
+    marginBottom: 16,
+  },
+  input: {
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.1)',
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: 8,
+  },
+  statusOption: {
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    marginRight: 8,
+    marginBottom: 8,
+  },
+  statusText: {
+    fontSize: 14,
   },
   colorPickerContainer: {
     marginBottom: 16,

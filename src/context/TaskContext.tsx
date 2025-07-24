@@ -482,7 +482,7 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
   };
 
   // Subtask methods
-  const getSubtasks = async (parentTaskId: number) => {
+  const getSubtasks = useCallback(async (parentTaskId: number) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       const subtasks = await dbHelper.getSubtasks(parentTaskId);
@@ -494,9 +494,9 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
-  };
+  }, [dbHelper, dispatch]);
 
-  const updateTaskCompletion = async (taskId: number, completionPercentage: number) => {
+  const updateTaskCompletion = useCallback(async (taskId: number, completionPercentage: number) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       await dbHelper.updateTaskCompletion(taskId, completionPercentage);
@@ -519,7 +519,7 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
-  };
+  }, [dbHelper, dispatch, state.tasks]);
 
   const value: TaskContextType = {
     tasks: state.tasks,

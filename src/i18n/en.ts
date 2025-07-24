@@ -65,10 +65,11 @@ const en: Translations = {
   'settings.categories.manage': 'Manage Categories',
   'settings.tags.manage': 'Manage Tags',
   'settings.categories.tags': 'Categories & Tags',
-  'settings.organization': 'Organization',
+  'settings.organization': 'Management',
   'categoryTagManagement.title': 'Categories & Tags',
   'categoryManagement.title': 'Category Management',
   'tagManagement.title': 'Tag Management',
+  'projectManagement.title': 'Project Management',
   'common.cancel': 'Cancel',
   'common.save': 'Save',
   'common.delete': 'Delete',
@@ -197,6 +198,30 @@ const en: Translations = {
   'taskItem.parentTask': 'Parent:',
   'taskItem.project': 'Project:',
   'taskItem.complete': 'complete',
+  
+  // Project Management Screen
+  'error': 'Error',
+  'project_name_required': 'Project name is required',
+  'delete_project': 'Delete Project',
+  'delete_project_confirmation': 'Are you sure you want to delete project "{name}"?',
+  'project_status_not_started': 'Not Started',
+  'project_status_in_progress': 'In Progress',
+  'project_status_completed': 'Completed',
+  'project_status_on_hold': 'On Hold',
+  'add_project': 'Add Project',
+  'edit_project': 'Edit Project',
+  'color': 'Color',
+  'no_projects': 'No projects found',
+  'cancel': 'Cancel',
+  'delete': 'Delete',
+  'add': 'Add',
+  'update': 'Update',
+  'project_name': 'Project Name',
+  'enter_project_name': 'Enter project name',
+  'project_description': 'Description',
+  'enter_project_description': 'Enter project description',
+  'project_status': 'Status',
+  'management.title': 'Management'
 };
 
 

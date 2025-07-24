@@ -77,7 +77,7 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
   const [state, dispatch] = useReducer(projectReducer, initialState);
   const dbHelper = DatabaseHelper.getInstance();
 
-  const loadProjects = async () => {
+  const loadProjects = useCallback(async () => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       const projects = await dbHelper.getAllProjects();
@@ -88,13 +88,13 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
-  };
+  }, [dispatch, dbHelper]);
 
   useEffect(() => {
     loadProjects();
   }, []);
 
-  const addProject = async (project: Omit<Project, 'id' | 'created_at'>) => {
+  const addProject = useCallback(async (project: Omit<Project, 'id' | 'created_at'>) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       const result = await dbHelper.insertProject(project);
@@ -116,9 +116,9 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
       console.error('Add project error:', error);
       return null;
     }
-  };
+  }, [dispatch, dbHelper]);
 
-  const updateProject = async (id: number, project: Partial<Project>) => {
+  const updateProject = useCallback(async (id: number, project: Partial<Project>) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       await dbHelper.updateProject(id, project);
@@ -129,9 +129,9 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
-  };
+  }, [dispatch, dbHelper]);
 
-  const deleteProject = async (id: number) => {
+  const deleteProject = useCallback(async (id: number) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       await dbHelper.deleteProject(id);
@@ -142,9 +142,9 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
-  };
+  }, [dispatch, dbHelper]);
 
-  const getTasksByProject = async (projectId: number) => {
+  const getTasksByProject = useCallback(async (projectId: number) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       const tasks = await dbHelper.getTasksByProject(projectId);
@@ -156,9 +156,9 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
-  };
+  }, [dispatch, dbHelper]);
 
-  const updateTaskProject = async (taskId: number, projectId: number | null) => {
+  const updateTaskProject = useCallback(async (taskId: number, projectId: number | null) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
       await dbHelper.updateTaskProject(taskId, projectId);
@@ -168,11 +168,11 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
-  };
+  }, [dispatch, dbHelper]);
 
-  const clearError = () => {
+  const clearError = useCallback(() => {
     dispatch({ type: 'CLEAR_ERROR' });
-  };
+  }, [dispatch]);
 
   const value: ProjectContextType = {
     projects: state.projects,

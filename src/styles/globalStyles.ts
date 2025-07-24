@@ -200,6 +200,7 @@ export const createGlobalStyles = (colors: any) => ({
     fontSize: fonts.sizes.xs,
     fontWeight: '600' as const,
     textTransform: 'uppercase' as const,
+    display: 'none',
   },
   priorityLow: {
     backgroundColor: colors.priority.low + '20',

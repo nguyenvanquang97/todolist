@@ -30,13 +30,19 @@ const TaskItem: React.FC<TaskItemProps> = ({
   const [subtasks, setSubtasks] = React.useState<Task[]>([]);
   
   React.useEffect(() => {
+    let isMounted = true;
     if (task.id) {
       const loadSubtasks = async () => {
         const tasks = await getSubtasks(task.id!);
-        setSubtasks(tasks);
+        if (isMounted) {
+          setSubtasks(tasks);
+        }
       };
       loadSubtasks();
     }
+    return () => {
+      isMounted = false;
+    };
   }, [task.id, getSubtasks]);
   const getPriorityColor = (priority: string) => {
     switch (priority) {

@@ -67,10 +67,11 @@ const vi: Translations = {
   'settings.categories.manage': 'Quản lý danh mục',
   'settings.tags.manage': 'Quản lý thẻ',
   'settings.categories.tags': 'Danh mục & Thẻ',
-  'settings.organization': 'Tổ chức',
+  'settings.organization': 'Quản lý',
   'categoryTagManagement.title': 'Danh mục & Thẻ',
   'categoryManagement.title': 'Quản lý danh mục',
   'tagManagement.title': 'Quản lý thẻ',
+  'projectManagement.title': 'Quản lý dự án',
   'common.cancel': 'Hủy',
   'common.save': 'Lưu',
   'common.delete': 'Xóa',
@@ -198,6 +199,30 @@ const vi: Translations = {
   'taskItem.parentTask': 'Công việc cha:',
   'taskItem.project': 'Dự án:',
   'taskItem.complete': 'hoàn thành',
+  
+  // Project Management Screen
+  'error': 'Lỗi',
+  'project_name_required': 'Tên dự án không được để trống',
+  'delete_project': 'Xóa dự án',
+  'delete_project_confirmation': 'Bạn có chắc chắn muốn xóa dự án "{name}"?',
+  'project_status_not_started': 'Chưa bắt đầu',
+  'project_status_in_progress': 'Đang thực hiện',
+  'project_status_completed': 'Hoàn thành',
+  'project_status_on_hold': 'Tạm dừng',
+  'add_project': 'Thêm dự án',
+  'edit_project': 'Sửa dự án',
+  'color': 'Màu sắc',
+  'no_projects': 'Không tìm thấy dự án nào',
+  'cancel': 'Hủy',
+  'delete': 'Xóa',
+  'add': 'Thêm',
+  'update': 'Cập nhật',
+  'project_name': 'Tên dự án',
+  'enter_project_name': 'Nhập tên dự án',
+  'project_description': 'Mô tả',
+  'enter_project_description': 'Nhập mô tả dự án',
+  'project_status': 'Trạng thái',
+  'management.title': 'Quản lý'
 };
 
 

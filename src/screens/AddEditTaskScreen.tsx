@@ -382,7 +382,7 @@ const [showParentTaskModal, setShowParentTaskModal] = useState(false);
                 <Text
                   style={[
                     globalStyles.priorityText,
-                    priority === option.value && { color: option.color },
+                    priority === option.value && { display: 'flex', color: option.color },
                   ]}
                 >
                   {option.label}

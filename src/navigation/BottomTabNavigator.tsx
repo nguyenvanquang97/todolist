@@ -7,9 +7,11 @@ import {baseColors} from '@styles/theme';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {useTranslation} from '@i18n/i18n';
 import TaskListScreen from '@/screens/TaskListScreen';
+import ManagementScreen from '@/screens/ManagementScreen';
 
 export type RootTabParamList = {
   TaskList: undefined | {screen: string; params?: any};
+  Management: undefined;
   Settings: undefined;
 };
 
@@ -30,6 +32,8 @@ const getTabBarIcon = (route: string) => {
 
     if (route === 'TaskList') {
       iconName = focused ? 'list' : 'list-outline';
+    } else if (route === 'Management') {
+      iconName = focused ? 'folder' : 'folder-outline';
     } else if (route === 'Settings') {
       iconName = focused ? 'settings' : 'settings-outline';
     }
@@ -59,6 +63,21 @@ const BottomTabNavigator: React.FC = () => {
         component={TaskListScreen}
         options={{
           title: t('taskList.title'),
+          headerShown: true,
+          headerStyle: {
+            backgroundColor: colors.bg_primary,
+          },
+          headerTintColor: baseColors.white,
+          headerTitleStyle: {
+            fontWeight: 'bold' as const,
+          },
+        }}
+      />
+      <Tab.Screen
+        name="Management"
+        component={ManagementScreen}
+        options={{
+          title: t('settings.organization'),
           headerShown: true,
           headerStyle: {
             backgroundColor: colors.bg_primary,

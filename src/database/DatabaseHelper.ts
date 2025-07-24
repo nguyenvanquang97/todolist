@@ -26,6 +26,7 @@ class DatabaseHelper {
           location: 'default',
         });
         await this.createTasksTable();
+        await this.checkAndUpdateSchema();
         console.log('Database initialized successfully');
       }
       return this.database;
@@ -155,10 +156,41 @@ class DatabaseHelper {
     }
   }
 
+  private async checkAndUpdateSchema(): Promise<void> {
+    try {
+      // Check if parent_task_id column exists in tasks table
+      try {
+        const checkParentTaskIdQuery = 'SELECT parent_task_id FROM tasks LIMIT 1;';
+        await this.database?.executeSql(checkParentTaskIdQuery);
+        console.log('parent_task_id column already exists');
+      } catch (e) {
+        // parent_task_id column doesn't exist, add it
+        const alterTableQuery = 'ALTER TABLE tasks ADD COLUMN parent_task_id INTEGER;';
+        await this.database?.executeSql(alterTableQuery);
+        console.log('Added parent_task_id column to tasks table');
+      }
+
+      // Check if completion_percentage column exists in tasks table
+      try {
+        const checkCompletionQuery = 'SELECT completion_percentage FROM tasks LIMIT 1;';
+        await this.database?.executeSql(checkCompletionQuery);
+        console.log('completion_percentage column already exists');
+      } catch (e) {
+        // completion_percentage column doesn't exist, add it
+        const alterTableQuery = 'ALTER TABLE tasks ADD COLUMN completion_percentage INTEGER DEFAULT 0;';
+        await this.database?.executeSql(alterTableQuery);
+        console.log('Added completion_percentage column to tasks table');
+      }
+    } catch (error) {
+      console.error('Error checking and updating schema:', error);
+      throw error;
+    }
+  }
+
   public async insertTask(task: Omit<Task, 'id' | 'created_at'>): Promise<DatabaseResult> {
     const insertQuery = `
-      INSERT INTO tasks (title, description, due_date, priority, status, created_at, category_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?);
+      INSERT INTO tasks (title, description, due_date, priority, status, created_at, category_id, project_id, parent_task_id, completion_percentage)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     `;
 
     const createdAt = new Date().toISOString();
@@ -170,6 +202,9 @@ class DatabaseHelper {
       task.status,
       createdAt,
       task.category_id || null,
+      task.project_id || null,
+      task.parent_task_id || null,
+      task.completion_percentage || 0,
     ];
 
     try {
