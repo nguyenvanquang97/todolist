@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput } from 'react-native';
+import { Toast } from '@components/Toast';
+import { ConfirmDialog } from '@components/ConfirmDialog';
 import { useTaskContext } from '@context/TaskContext';
 import { Tag } from '@/types/Task';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -25,7 +27,7 @@ const TagManagementScreen: React.FC = () => {
 
   const handleAddTag = () => {
     if (!name.trim()) {
-      Alert.alert(t('common.error'), t('common.errors.validation'));
+      Toast.show(t('common.errors.validation'), 'error');
       return;
     }
 
@@ -40,7 +42,7 @@ const TagManagementScreen: React.FC = () => {
   const handleUpdateTag = () => {
     if (!editingTag || editingTag.id === undefined) return;
     if (!name.trim()) {
-      Alert.alert(t('common.error'), t('common.errors.validation'));
+      Toast.show(t('common.errors.validation'), 'error');
       return;
     }
 
@@ -53,22 +55,24 @@ const TagManagementScreen: React.FC = () => {
   };
 
   const handleDeleteTag = (id: number) => {
-    Alert.alert(
-      t('common.confirm'),
-      t('taskDetail.deleteConfirmMessage'),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('common.delete'),
-          style: 'destructive',
-          onPress: () => {
-            deleteTag(id).then(() => {
-              resetForm();
-            });
-          },
-        },
-      ]
-    );
+    ConfirmDialog.show({
+      title: t('tag.deleteConfirmTitle'),
+      message: t('tag.deleteConfirmMessage'),
+      confirmText: t('common.delete'),
+      cancelText: t('common.cancel'),
+      onConfirm: () => {
+        // Đảm bảo không có dialog nào hiển thị khi xóa tag
+        deleteTag(id).then(() => {
+          // Chỉ gọi resetForm nếu đang ở chế độ chỉnh sửa tag đang bị xóa
+          if (editingTag?.id === id) {
+            resetForm();
+          }
+          Toast.show(t('common.success'), 'success');
+        }).catch((error) => {
+          Toast.show(t('common.error'), 'error');
+        });
+      }
+    });
   };
 
   const startEditing = (tag: Tag) => {

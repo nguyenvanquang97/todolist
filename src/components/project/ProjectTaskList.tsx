@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { Toast } from '@components/Toast';
+import { ConfirmDialog } from '@components/ConfirmDialog';
 import { useTaskContext } from '@context/TaskContext';
 import { useTheme } from '@context/ThemeContext';
 import { Task, Project } from '../../types/Task';
@@ -30,27 +32,23 @@ const ProjectTaskList: React.FC<ProjectTaskListProps> = ({ project }) => {
     navigation.navigate('TaskDetail' as any, { taskId: task.id });
   };
 
-  const handleRemoveTaskFromProject = (taskId: number) => {
-    Alert.alert(
-      t('remove_from_project'),
-      t('remove_task_from_project_confirmation'),
-      [
-        { text: t('cancel'), style: 'cancel' },
-        {
-          text: t('remove'),
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await updateTaskProject(taskId, null);
-              // Task list will update automatically via the tasks context
-            } catch (error) {
-              console.error('Error removing task from project:', error);
-              Alert.alert(t('error'), t('failed_to_remove_task_from_project'));
-            }
-          },
-        },
-      ],
-    );
+  const handleRemoveTaskFromProject = async (taskId: number) => {
+    ConfirmDialog.show({
+      title: t('taskList.removeConfirmTitle'),
+      message: t('taskList.removeConfirmMessage'),
+      confirmText: t('common.remove'),
+      cancelText: t('common.cancel'),
+      onConfirm: async () => {
+        try {
+          await updateTaskProject(taskId, null);
+          // Task list will update automatically via the tasks context
+          Toast.show(t('task_removed_from_project'), 'success');
+        } catch (error) {
+          console.error('Error removing task from project:', error);
+          Toast.show(t('failed_to_remove_task_from_project'), 'error');
+        }
+      }
+    });
   };
 
   const renderItem = ({ item }: { item: Task }) => (

@@ -5,12 +5,12 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Alert,
   FlatList,
   Modal,
   StyleSheet,
   Switch,
 } from 'react-native';
+import { Toast } from '@components/Toast';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp, useNavigation, NavigationProp } from '@react-navigation/native';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
@@ -142,9 +142,8 @@ const [showParentTaskModal, setShowParentTaskModal] = useState(false);
           }
         }
         
-        Alert.alert(t('common.success'), t('addEditTask.updateSuccess'), [
-          { text: t('common.ok'), onPress: () => navigation.goBack() },
-        ]);
+        Toast.show(t('addEditTask.updateSuccess'), 'success');
+        navigation.goBack();
       } else {
         // Add new task
         const newTaskId = await addTask({
@@ -163,12 +162,11 @@ const [showParentTaskModal, setShowParentTaskModal] = useState(false);
           }
         }
         
-        Alert.alert(t('common.success'), t('addEditTask.addSuccess'), [
-          { text: t('common.ok'), onPress: () => navigation.goBack() },
-        ]);
+        Toast.show(t('addEditTask.addSuccess'), 'success');
+        navigation.goBack();
       }
     } catch (error) {
-      Alert.alert(t('common.error'), t('addEditTask.saveError'));
+      Toast.show(t('addEditTask.saveError'), 'error');
     }
   }, [validateForm, title, description, priority, dueDate, selectedCategory, selectedTags, isEditMode, task, updateTask, addTask, getTagsForTask, addTagToTask, removeTagFromTask, navigation, t]);
 

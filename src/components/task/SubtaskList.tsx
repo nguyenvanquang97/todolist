@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
+import { Toast } from '@components/Toast';
+import { ConfirmDialog } from '@components/ConfirmDialog';
 import { useTaskContext } from '@context/TaskContext';
 import { useTheme } from '@context/ThemeContext';
 import type { Task } from '@/types/Task';
@@ -79,7 +81,7 @@ const SubtaskList: React.FC<SubtaskListProps> = ({ parentTaskId, subtasks: initi
 
   const handleAddSubtask = async () => {
     if (!newSubtaskTitle.trim() || !parentTaskId) {
-      Alert.alert(t('common.error'), t('addEditTask.errors.emptyTitle'));
+      Toast.show(t('addEditTask.errors.emptyTitle'), 'error');
       return;
     }
 
@@ -115,7 +117,7 @@ const SubtaskList: React.FC<SubtaskListProps> = ({ parentTaskId, subtasks: initi
       }
     } catch (error) {
       console.error('Error adding subtask:', error);
-      Alert.alert(t('common.error'), t('addEditTask.addError'));
+      Toast.show(t('addEditTask.addError'), 'error');
     }
   };
 
@@ -150,40 +152,37 @@ const SubtaskList: React.FC<SubtaskListProps> = ({ parentTaskId, subtasks: initi
       }
     } catch (error) {
       console.error('Error updating subtask status:', error);
-      Alert.alert(t('common.error'), t('addEditTask.updateError'));
+      Toast.show(t('addEditTask.updateError'), 'error');
     }
   };
 
-  const handleDeleteSubtask = (subtaskId: number) => {
-    Alert.alert(
-      t('taskDetail.deleteConfirmTitle'),
-      t('taskDetail.deleteConfirmMessage'),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('common.delete'),
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deleteTask(subtaskId);
-              
-              // Cập nhật trực tiếp state thay vì gọi loadSubtasks để tránh vòng lặp vô hạn
-              const updatedSubtasks = subtasks.filter(task => task.id !== subtaskId);
-              setSubtasks(updatedSubtasks);
-              calculateOverallProgress(updatedSubtasks);
-              
-              // Thông báo cho component cha nếu callback được cung cấp
-              if (onSubtasksChanged) {
-                onSubtasksChanged(updatedSubtasks);
-              }
-            } catch (error) {
-              console.error('Error deleting subtask:', error);
-              Alert.alert(t('common.error'), t('taskList.deleteError'));
-            }
-          },
-        },
-      ],
-    );
+  const handleDeleteSubtask = async (subtaskId: number) => {
+    ConfirmDialog.show({
+      title: t('taskList.deleteConfirmTitle'),
+      message: t('taskList.deleteConfirmMessage'),
+      confirmText: t('common.delete'),
+      cancelText: t('common.cancel'),
+      onConfirm: async () => {
+        try {
+          await deleteTask(subtaskId);
+          
+          // Cập nhật trực tiếp state thay vì gọi loadSubtasks để tránh vòng lặp vô hạn
+          const updatedSubtasks = subtasks.filter(task => task.id !== subtaskId);
+          setSubtasks(updatedSubtasks);
+          calculateOverallProgress(updatedSubtasks);
+          
+          // Thông báo cho component cha nếu callback được cung cấp
+          if (onSubtasksChanged) {
+            onSubtasksChanged(updatedSubtasks);
+          }
+          
+          Toast.show(t('taskList.success.deleted'), 'success');
+        } catch (error) {
+          console.error('Error deleting subtask:', error);
+          Toast.show(t('taskList.deleteError'), 'error');
+        }
+      }
+    });
   };
 
   const renderSubtask = (subtask: Task) => {

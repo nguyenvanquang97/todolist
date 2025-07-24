@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, TextInput } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput } from 'react-native';
+import { Toast } from '@components/Toast';
+import { ConfirmDialog } from '@components/ConfirmDialog';
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { useProjectContext } from '@context/ProjectContext';
 import { useTheme } from '@context/ThemeContext';
@@ -43,7 +45,7 @@ const ProjectManagementScreen: React.FC = () => {
 
   const handleAddProject = useCallback(async () => {
     if (!projectName.trim()) {
-      Alert.alert(t('error'), t('project_name_required'));
+      Toast.show(t('project_name_required'), 'error');
       return;
     }
 
@@ -62,7 +64,7 @@ const ProjectManagementScreen: React.FC = () => {
 
   const handleEditProject = useCallback(async () => {
     if (!selectedProject || !projectName.trim()) {
-      Alert.alert(t('error'), t('project_name_required'));
+      Toast.show(t('project_name_required'), 'error');
       return;
     }
 
@@ -80,22 +82,22 @@ const ProjectManagementScreen: React.FC = () => {
   }, [selectedProject, projectName, projectDescription, startDate, endDate, projectStatus, projectColor, updateProject, resetForm, t]);
 
   const handleDeleteProject = useCallback((project: Project) => {
-    Alert.alert(
-      t('delete_project'),
-      t('delete_project_confirmation', { name: project.name }),
-      [
-        { text: t('cancel'), style: 'cancel' },
-        {
-          text: t('delete'),
-          style: 'destructive',
-          onPress: async () => {
-            if (project.id) {
-              await deleteProject(project.id);
-            }
-          },
-        },
-      ],
-    );
+    ConfirmDialog.show({
+      title: t('project.deleteConfirmTitle'),
+      message: t('project.deleteConfirmMessage'),
+      confirmText: t('common.delete'),
+      cancelText: t('common.cancel'),
+      onConfirm: async () => {
+        try {
+          if (project.id) {
+            await deleteProject(project.id);
+            Toast.show(t('taskList.success.deleted'), 'success');
+          }
+        } catch (error) {
+          Toast.show(t('common.errors.database'), 'error');
+        }
+      }
+    });
   }, [t, deleteProject]);
 
   const handleSelectProject = useCallback((project: Project) => {

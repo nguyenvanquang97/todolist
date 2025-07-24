@@ -1,5 +1,7 @@
 import React from 'react';
-import {View, Text, TouchableOpacity, StyleSheet, Alert} from 'react-native';
+import {View, Text, TouchableOpacity, StyleSheet} from 'react-native';
+import { Toast } from '@components/Toast';
+import { ConfirmDialog } from '@components/ConfirmDialog';
 import Icon from 'react-native-vector-icons/Ionicons';
 import moment from 'moment';
 import {Task} from '../types/Task';
@@ -83,23 +85,6 @@ const TaskItem: React.FC<TaskItemProps> = ({
     onToggleStatus(task.id!, newStatus);
   };
 
-  const handleDelete = () => {
-    Alert.alert(
-      t('taskList.deleteConfirmTitle'),
-      t('taskList.deleteConfirmMessage'),
-      [
-        {
-          text: t('common.cancel'),
-          style: 'cancel',
-        },
-        {
-          text: t('common.delete'),
-          style: 'destructive',
-          onPress: () => onDelete(task.id!),
-        },
-      ],
-    );
-  };
 
   const isOverdue =
     task.due_date &&
@@ -158,7 +143,7 @@ const TaskItem: React.FC<TaskItemProps> = ({
             )}
           </View>
 
-          <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
+          <TouchableOpacity onPress={() => onDelete(task.id!)} style={styles.deleteButton}>
             <Icon name="trash-outline" size={20} color={colors.danger} />
           </TouchableOpacity>
         </View>

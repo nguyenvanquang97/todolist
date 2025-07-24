@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import { Toast } from '@components/Toast';
+import { ConfirmDialog } from '@components/ConfirmDialog';
 import { useNavigation, useRoute, RouteProp, NavigationProp } from '@react-navigation/native';
 import { useProjectContext } from '@context/ProjectContext';
 import { useTaskContext } from '@context/TaskContext';
@@ -55,24 +57,24 @@ const ProjectDetailScreen: React.FC = () => {
     }
   };
 
-  const handleRemoveTaskFromProject = (taskId: number) => {
-    Alert.alert(
-      t('remove_from_project'),
-      t('remove_task_from_project_confirmation'),
-      [
-        { text: t('cancel'), style: 'cancel' },
-        {
-          text: t('remove'),
-          style: 'destructive',
-          onPress: async () => {
-            await updateTaskProject(taskId, null);
-            // Refresh project tasks
-            const updatedTasks = await getTasksByProject(projectId);
-            setProjectTasks(updatedTasks);
-          },
-        },
-      ],
-    );
+  const handleRemoveTaskFromProject = async (taskId: number) => {
+    ConfirmDialog.show({
+      title: t('taskList.removeConfirmTitle'),
+      message: t('taskList.removeConfirmMessage'),
+      confirmText: t('common.remove'),
+      cancelText: t('common.cancel'),
+      onConfirm: async () => {
+        try {
+          await updateTaskProject(taskId, null);
+          // Refresh project tasks
+          const updatedTasks = await getTasksByProject(projectId);
+          setProjectTasks(updatedTasks);
+          Toast.show(t('task_removed_from_project'), 'success');
+        } catch (error) {
+          Toast.show(t('error_removing_task'), 'error');
+        }
+      }
+    });
   };
 
   const handleAddTaskToProject = () => {

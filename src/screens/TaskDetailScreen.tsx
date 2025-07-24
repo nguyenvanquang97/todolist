@@ -3,12 +3,12 @@ import {
   View,
   Text,
   ScrollView,
-  Alert,
   StyleSheet,
-  ToastAndroid,
   Platform,
   TouchableOpacity,
 } from 'react-native';
+import { Toast } from '@components/Toast';
+import { ConfirmDialog } from '@components/ConfirmDialog';
 import Button from '@components/Button';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp, NavigationProp } from '@react-navigation/native';
@@ -94,31 +94,27 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
     });
   }, [navigation, task]);
 
-  const handleDelete = useCallback(async () => {
-    Alert.alert(
-      t('taskDetail.deleteConfirmTitle'),
-      t('taskDetail.deleteConfirmMessage'),
-      [
-        {
-          text: t('common.cancel'),
-          style: 'cancel',
-        },
-        {
-          text: t('common.delete'),
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              if (task.id !== undefined) {
-                await deleteTask(task.id);
-                navigation.goBack();
-              }
-            } catch (error) {
-              Alert.alert(t('common.error'), t('taskDetail.deleteError'));
-            }
-          },
-        },
-      ]
-    );
+  const handleDelete = useCallback(() => {
+    // Sử dụng ConfirmDialog để xác nhận trước khi xóa
+    ConfirmDialog.show({
+      title: t('common.confirm'),
+      message: t('taskDetail.deleteConfirmMessage'),
+      confirmText: t('common.delete'),
+      cancelText: t('common.cancel'),
+      type: 'warning',
+      onConfirm: async () => {
+        try {
+          if (task.id !== undefined) {
+            await deleteTask(task.id);
+            Toast.show(t('taskDetail.deleteSuccess'), 'success');
+            navigation.goBack();
+          }
+        } catch (error) {
+          Toast.show(t('taskDetail.deleteError'), 'error');
+        }
+      },
+      onCancel: () => {}
+    });
   }, [deleteTask, navigation, task, t]);
 
   // Cấu hình header buttons
@@ -210,20 +206,16 @@ const TaskDetailScreen: React.FC<Props> = ({ navigation, route }) => {
         }
       }
     } catch (error) {
-      Alert.alert(t('common.error'), t('taskDetail.updateStatusError'));
+      Toast.show(t('taskDetail.updateStatusError'), 'error');
     }
   };
 
   const handleTestNotification = async () => {
     try {
       await testNotification();
-      if (Platform.OS === 'android') {
-        ToastAndroid.show(t('taskDetail.notificationSent'), ToastAndroid.SHORT);
-      } else {
-        Alert.alert(t('common.notification'), t('taskDetail.notificationSent'));
-      }
+      Toast.show(t('taskDetail.notificationSent'), 'success');
     } catch (error: unknown) {
-      Alert.alert(t('common.error'), t('taskDetail.notificationError'));
+      Toast.show(t('taskDetail.notificationError'), 'error');
     }
   };
 

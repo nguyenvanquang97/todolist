@@ -1,30 +1,34 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, {useState, useEffect, useCallback, useMemo} from 'react';
 import {
   View,
   FlatList,
   TouchableOpacity,
   Text,
-  Alert,
   RefreshControl,
 } from 'react-native';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { NavigationProp, useNavigation } from '@react-navigation/native';
+import {Toast} from '@components/Toast';
+import {ConfirmDialog} from '@components/ConfirmDialog';
+import {StackNavigationProp} from '@react-navigation/stack';
+import {NavigationProp, useNavigation} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { RootStackParamList } from '@navigation/RootStackNavigator';
-import { useTaskContext } from '@context/TaskContext';
-import { useProjectContext } from '@context/ProjectContext';
-import { Task, TaskFilter, Category } from '../types/Task';
+import {RootStackParamList} from '@navigation/RootStackNavigator';
+import {useTaskContext} from '@context/TaskContext';
+import {useProjectContext} from '@context/ProjectContext';
+import {Task, TaskFilter, Category} from '../types/Task';
 import MemoizedTaskItem from '@components/MemoizedTaskItem';
 import SearchBar from '@components/SearchBar';
 import FilterModal from '@components/FilterModal';
 import LoadingSpinner from '@components/LoadingSpinner';
-import { useGlobalStyles } from '@styles/globalStyles';
-import { spacing, baseColors } from '@styles/theme';
-import { useTheme } from '@context/ThemeContext';
+import {useGlobalStyles} from '@styles/globalStyles';
+import {spacing, baseColors} from '@styles/theme';
+import {useTheme} from '@context/ThemeContext';
 import Button from '@/components/Button';
-import { useTranslation } from '@i18n/i18n';
+import {useTranslation} from '@i18n/i18n';
 
-type TaskListScreenNavigationProp = NavigationProp<RootStackParamList, 'TaskList'>;
+type TaskListScreenNavigationProp = NavigationProp<
+  RootStackParamList,
+  'TaskList'
+>;
 
 const TaskListScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
@@ -41,11 +45,11 @@ const TaskListScreen: React.FC = () => {
     getSubtasks,
     projects,
   } = useTaskContext();
-  
-  const { projects: projectsContext } = useProjectContext();
 
-  const { colors } = useTheme();
-  const { t } = useTranslation();
+  const {projects: projectsContext} = useProjectContext();
+
+  const {colors} = useTheme();
+  const {t} = useTranslation();
   const globalStyles = useGlobalStyles();
 
   const [showFilterModal, setShowFilterModal] = useState(false);
@@ -62,23 +66,22 @@ const TaskListScreen: React.FC = () => {
   useEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <View style={{ flexDirection: 'row' }}>
+        <View style={{flexDirection: 'row'}}>
           <TouchableOpacity
-            style={{ marginRight: 15 }}
-            onPress={() => setShowFilterModal(true)}
-          >
+            style={{marginRight: 15}}
+            onPress={() => setShowFilterModal(true)}>
             <Icon name="filter" size={24} color={baseColors.white} />
           </TouchableOpacity>
           <TouchableOpacity
-            style={{ marginRight: 15 }}
-            onPress={() => navigation.navigate('ProjectManagement' as any)}
-          >
+            style={{marginRight: 15}}
+            onPress={() => navigation.navigate('ProjectManagement' as any)}>
             <Icon name="folder-outline" size={24} color={baseColors.white} />
           </TouchableOpacity>
           <TouchableOpacity
-            style={{ marginRight: 15 }}
-            onPress={() => navigation.navigate('AddEditTask' as any, { mode: 'add' })}
-          >
+            style={{marginRight: 15}}
+            onPress={() =>
+              navigation.navigate('AddEditTask' as any, {mode: 'add'})
+            }>
             <Icon name="add" size={24} color={baseColors.white} />
           </TouchableOpacity>
         </View>
@@ -88,14 +91,10 @@ const TaskListScreen: React.FC = () => {
 
   useEffect(() => {
     if (error) {
-      Alert.alert(t('common.error'), error, [
-        {
-          text: t('common.ok'),
-          onPress: clearError,
-        },
-      ]);
+      Toast.show(error, 'error');
+      clearError();
     }
-  }, [error, clearError, t]);
+  }, [error, clearError]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -103,119 +102,186 @@ const TaskListScreen: React.FC = () => {
     setRefreshing(false);
   };
 
-  const applyCurrentFilter = useCallback(async (filter: TaskFilter) => {
-    if (
-      filter.status === 'all' &&
-      filter.priority === 'all' &&
-      !filter.searchQuery
-    ) {
-      await loadTasks();
-    } else {
-      await filterTasks(filter);
-    }
-  }, [loadTasks, filterTasks]);
-
-  const handleSearch = useCallback(async (query: string) => {
-    const newFilter = { ...currentFilter, searchQuery: query };
-    setCurrentFilter(newFilter);
-
-    try {
-      if (query.trim()) {
-        await searchTasks(query);
+  const applyCurrentFilter = useCallback(
+    async (filter: TaskFilter) => {
+      if (
+        filter.status === 'all' &&
+        filter.priority === 'all' &&
+        !filter.searchQuery
+      ) {
+        await loadTasks();
       } else {
-        await applyCurrentFilter(newFilter);
+        await filterTasks(filter);
       }
-    } catch (error) {
-      console.error('Search error:', error);
-      // Không làm gì khi có lỗi để giữ nguyên trạng thái hiện tại
-    }
-  }, [currentFilter, searchTasks, applyCurrentFilter]);
+    },
+    [loadTasks, filterTasks],
+  );
+
+  const handleSearch = useCallback(
+    async (query: string) => {
+      const newFilter = {...currentFilter, searchQuery: query};
+      setCurrentFilter(newFilter);
+
+      try {
+        if (query.trim()) {
+          await searchTasks(query);
+        } else {
+          await applyCurrentFilter(newFilter);
+        }
+      } catch (error) {
+        console.error('Search error:', error);
+        // Không làm gì khi có lỗi để giữ nguyên trạng thái hiện tại
+      }
+    },
+    [currentFilter, searchTasks, applyCurrentFilter],
+  );
 
   // Keep SearchBar in sync with current filter
-  const searchQuery = useMemo(() => currentFilter.searchQuery, [currentFilter.searchQuery]);
+  const searchQuery = useMemo(
+    () => currentFilter.searchQuery,
+    [currentFilter.searchQuery],
+  );
 
-  const handleToggleStatus = useCallback(async (id: number, status: 'pending' | 'completed') => {
-    try {
-      await updateTask(id, { status });
-    } catch (error) {
-      Alert.alert(t('common.error'), t('taskDetail.updateStatusError'));
-    }
-  }, [updateTask, t]);
+  const handleToggleStatus = useCallback(
+    async (id: number, status: 'pending' | 'completed') => {
+      try {
+        await updateTask(id, {status});
+      } catch (error) {
+        Toast.show(t('taskDetail.updateStatusError'), 'error');
+      }
+    },
+    [updateTask, t],
+  );
 
-  const handleDeleteTask = useCallback(async (id: number) => {
-    try {
-      await deleteTask(id);
-    } catch (error) {
-      Alert.alert(t('common.error'), t('taskList.deleteError'));
-    }
-  }, [deleteTask, t]);
+  const handleDeleteTask = useCallback(
+    async (id: number) => {
+      ConfirmDialog.show({
+        title: t('taskList.deleteConfirmTitle'),
+        message: t('taskList.deleteConfirmMessage'),
+        confirmText: t('common.delete'),
+        cancelText: t('common.cancel'),
+        onConfirm: async () => {
+          try {
+            await deleteTask(id);
+            Toast.show(t('taskList.success.deleted'), 'success');
+          } catch (error) {
+            Toast.show(t('taskList.deleteError'), 'error');
+          }
+        },
+      });
+    },
+    [deleteTask, t],
+  );
 
-  const handleTaskPress = useCallback((task: Task) => {
-    navigation.navigate('TaskDetail' as any, { task });
-  }, [navigation]);
+  const handleTaskPress = useCallback(
+    (task: Task) => {
+      navigation.navigate('TaskDetail' as any, {task});
+    },
+    [navigation],
+  );
 
-  const handleApplyFilter = useCallback(async (filter: TaskFilter) => {
-    setCurrentFilter(filter);
-    await applyCurrentFilter(filter);
-  }, [applyCurrentFilter]);
+  const handleApplyFilter = useCallback(
+    async (filter: TaskFilter) => {
+      setCurrentFilter(filter);
+      await applyCurrentFilter(filter);
+    },
+    [applyCurrentFilter],
+  );
 
-  const renderTaskItem = useCallback(({ item }: { item: Task }) => {
-    // Skip subtasks if show_subtasks is false
-    if (!currentFilter.show_subtasks && item.parent_task_id) {
-      return null;
-    }
-    
-    // Filter by project
-    if (currentFilter.project_id === 'none' && item.project_id) {
-      return null;
-    }
-    
-    if (currentFilter.project_id !== 'all' && currentFilter.project_id !== 'none' && 
-        item.project_id?.toString() !== currentFilter.project_id) {
-      return null;
-    }
-    
-    return (
-      <MemoizedTaskItem
-        task={item}
-        onPress={() => handleTaskPress(item)}
-        onToggleStatus={handleToggleStatus}
-        onDelete={handleDeleteTask}
-      />
-    );
-  }, [handleTaskPress, handleToggleStatus, handleDeleteTask, currentFilter.show_subtasks, currentFilter.project_id]);
+  const renderTaskItem = useCallback(
+    ({item}: {item: Task}) => {
+      // Skip subtasks if show_subtasks is false
+      if (!currentFilter.show_subtasks && item.parent_task_id) {
+        return null;
+      }
 
-  const renderEmptyState = useCallback(() => (
-    <View style={[globalStyles.emptyContainer, { backgroundColor: colors.background }]}>
-      <Icon name="clipboard-outline" size={64} color={colors.textDisabled} />
-      <Text style={[globalStyles.emptyText, { color: colors.text }]}>
-        {currentFilter.searchQuery || currentFilter.status !== 'all' || currentFilter.priority !== 'all' || 
-         currentFilter.category_id !== 'all' || currentFilter.project_id !== 'all' || !currentFilter.show_subtasks
-          ? t('taskList.noSearchResults')
-          : t('taskList.emptyList')}
-      </Text>
-      <Text style={[globalStyles.emptySubtext, { color: colors.textSecondary }]}>
-        {currentFilter.searchQuery || currentFilter.status !== 'all' || currentFilter.priority !== 'all' || 
-         currentFilter.category_id !== 'all' || currentFilter.project_id !== 'all' || !currentFilter.show_subtasks
-          ? t('taskList.changeFilterPrompt')
-          : t('taskList.addTaskPrompt')}
-      </Text>
-      {(!currentFilter.searchQuery && currentFilter.status === 'all' && currentFilter.priority === 'all' && 
-        currentFilter.category_id === 'all' && currentFilter.project_id === 'all' && currentFilter.show_subtasks) && (
-          <Button
-            title={t('taskList.addFirstTask')}
-            style={{ marginTop: spacing.lg }}
-            onPress={() => navigation.navigate('AddEditTask' as any, { mode: 'add' })}
-          />
-        )}
-    </View>
-  ), [colors, currentFilter, navigation, t]);
+      // Filter by project
+      if (currentFilter.project_id === 'none' && item.project_id) {
+        return null;
+      }
+
+      if (
+        currentFilter.project_id !== 'all' &&
+        currentFilter.project_id !== 'none' &&
+        item.project_id?.toString() !== currentFilter.project_id
+      ) {
+        return null;
+      }
+
+      return (
+        <MemoizedTaskItem
+          task={item}
+          onPress={() => handleTaskPress(item)}
+          onToggleStatus={handleToggleStatus}
+          onDelete={handleDeleteTask}
+        />
+      );
+    },
+    [
+      handleTaskPress,
+      handleToggleStatus,
+      handleDeleteTask,
+      currentFilter.show_subtasks,
+      currentFilter.project_id,
+    ],
+  );
+
+  const renderEmptyState = useCallback(
+    () => (
+      <View
+        style={[
+          globalStyles.emptyContainer,
+          {backgroundColor: colors.background},
+        ]}>
+        <Icon name="clipboard-outline" size={64} color={colors.textDisabled} />
+        <Text style={[globalStyles.emptyText, {color: colors.text}]}>
+          {currentFilter.searchQuery ||
+          currentFilter.status !== 'all' ||
+          currentFilter.priority !== 'all' ||
+          currentFilter.category_id !== 'all' ||
+          currentFilter.project_id !== 'all' ||
+          !currentFilter.show_subtasks
+            ? t('taskList.noSearchResults')
+            : t('taskList.emptyList')}
+        </Text>
+        <Text
+          style={[globalStyles.emptySubtext, {color: colors.textSecondary}]}>
+          {currentFilter.searchQuery ||
+          currentFilter.status !== 'all' ||
+          currentFilter.priority !== 'all' ||
+          currentFilter.category_id !== 'all' ||
+          currentFilter.project_id !== 'all' ||
+          !currentFilter.show_subtasks
+            ? t('taskList.changeFilterPrompt')
+            : t('taskList.addTaskPrompt')}
+        </Text>
+        {!currentFilter.searchQuery &&
+          currentFilter.status === 'all' &&
+          currentFilter.priority === 'all' &&
+          currentFilter.category_id === 'all' &&
+          currentFilter.project_id === 'all' &&
+          currentFilter.show_subtasks && (
+            <Button
+              title={t('taskList.addFirstTask')}
+              style={{marginTop: spacing.lg}}
+              onPress={() =>
+                navigation.navigate('AddEditTask' as any, {mode: 'add'})
+              }
+            />
+          )}
+      </View>
+    ),
+    [colors, currentFilter, navigation, t],
+  );
 
   // Memo hóa danh sách tasks để tránh render lại không cần thiết
   const memoizedTasks = useMemo(() => tasks, [tasks]);
 
   // Memo hóa keyExtractor để tránh tạo lại hàm mới mỗi khi render
-  const keyExtractor = useCallback((item: Task) => item.id?.toString() || '', []);
+  const keyExtractor = useCallback(
+    (item: Task) => item.id?.toString() || '',
+    [],
+  );
 
   // Tính toán chiều cao của mỗi item dựa trên nội dung
   const calculateItemHeight = useCallback((item: Task): number => {
@@ -238,7 +304,7 @@ const TaskListScreen: React.FC = () => {
     const heights: number[] = [];
     let accumHeight = 0;
 
-    memoizedTasks.forEach((task) => {
+    memoizedTasks.forEach(task => {
       const height = calculateItemHeight(task);
       heights.push(accumHeight);
       accumHeight += height;
@@ -248,28 +314,32 @@ const TaskListScreen: React.FC = () => {
   }, [memoizedTasks, calculateItemHeight]);
 
   // Memo hóa getItemLayout để tránh tính toán lại mỗi khi render
-  const getItemLayout = useCallback((data: any, index: number) => {
-    // Nếu không có dữ liệu hoặc index nằm ngoài phạm vi, sử dụng giá trị mặc định
-    if (!data || index >= data.length || !itemHeights[index]) {
-      return {
-        length: 150,
-        offset: 150 * index,
-        index,
-      };
-    }
+  const getItemLayout = useCallback(
+    (data: any, index: number) => {
+      // Nếu không có dữ liệu hoặc index nằm ngoài phạm vi, sử dụng giá trị mặc định
+      if (!data || index >= data.length || !itemHeights[index]) {
+        return {
+          length: 150,
+          offset: 150 * index,
+          index,
+        };
+      }
 
-    const length = calculateItemHeight(data[index]);
-    const offset = itemHeights[index];
+      const length = calculateItemHeight(data[index]);
+      const offset = itemHeights[index];
 
-    return { length, offset, index };
-  }, [calculateItemHeight, itemHeights]);
+      return {length, offset, index};
+    },
+    [calculateItemHeight, itemHeights],
+  );
 
   if (loading && tasks.length === 0) {
     return <LoadingSpinner text={t('taskList.loading')} />;
   }
 
   return (
-    <View style={[globalStyles.container, { backgroundColor: colors.background }]}>
+    <View
+      style={[globalStyles.container, {backgroundColor: colors.background}]}>
       <SearchBar
         onSearch={handleSearch}
         onClear={() => handleSearch('')}
@@ -282,7 +352,7 @@ const TaskListScreen: React.FC = () => {
         keyExtractor={keyExtractor}
         contentContainerStyle={[
           globalStyles.listContainer,
-          memoizedTasks.length === 0 && { flex: 1 },
+          memoizedTasks.length === 0 && {flex: 1},
         ]}
         ListEmptyComponent={renderEmptyState}
         refreshControl={
@@ -294,7 +364,6 @@ const TaskListScreen: React.FC = () => {
           />
         }
         showsVerticalScrollIndicator={false}
-
         // Tối ưu hiệu suất cho danh sách lớn
         windowSize={5} // Giảm số lượng items được render cùng lúc (mặc định là 21)
         maxToRenderPerBatch={5} // Giảm số lượng items được render trong một lần (mặc định là 10)
@@ -306,7 +375,6 @@ const TaskListScreen: React.FC = () => {
           minIndexForVisible: 0,
           autoscrollToTopThreshold: 10,
         }}
-
         // Tối ưu thêm
         disableVirtualization={false} // Đảm bảo virtualization được bật
         legacyImplementation={false} // Sử dụng implementation mới
@@ -315,7 +383,6 @@ const TaskListScreen: React.FC = () => {
         directionalLockEnabled={true} // Chỉ cho phép cuộn theo một hướng tại một thời điểm
         showsHorizontalScrollIndicator={false}
         automaticallyAdjustContentInsets={false} // Tránh điều chỉnh content insets tự động
-
         // Tối ưu bộ nhớ
         extraData={refreshing} // Chỉ render lại khi refreshing thay đổi
         progressViewOffset={0}

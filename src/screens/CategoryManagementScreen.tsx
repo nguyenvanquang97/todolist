@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput } from 'react-native';
+import { Toast } from '@components/Toast';
+import { ConfirmDialog } from '@components/ConfirmDialog';
 import { useTaskContext } from '../context/TaskContext';
 import { Category } from '../types/Task';
 import Icon from 'react-native-vector-icons/MaterialIcons';
@@ -27,7 +29,7 @@ const CategoryManagementScreen: React.FC = () => {
 
   const handleAddCategory = () => {
     if (!name.trim()) {
-      Alert.alert(t('common.error'), t('common.errors.validation'));
+      Toast.show(t('common.errors.validation'), 'error');
       return;
     }
 
@@ -43,7 +45,7 @@ const CategoryManagementScreen: React.FC = () => {
   const handleUpdateCategory = () => {
     if (!editingCategory || editingCategory.id === undefined) return;
     if (!name.trim()) {
-      Alert.alert(t('common.error'), t('common.errors.validation'));
+      Toast.show(t('common.errors.validation'), 'error');
       return;
     }
 
@@ -57,22 +59,22 @@ const CategoryManagementScreen: React.FC = () => {
   };
 
   const handleDeleteCategory = (id: number) => {
-    Alert.alert(
-      t('common.confirm'),
-      t('taskDetail.deleteConfirmMessage'),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('common.delete'),
-          style: 'destructive',
-          onPress: () => {
-            deleteCategory(id).then(() => {
-              resetForm();
-            });
-          },
-        },
-      ]
-    );
+    ConfirmDialog.show({
+      title: t('category.deleteConfirmTitle'),
+      message: t('category.deleteConfirmMessage'),
+      confirmText: t('common.delete'),
+      cancelText: t('common.cancel'),
+      type: 'warning',
+      onConfirm: () => {
+        deleteCategory(id).then(() => {
+          resetForm();
+          Toast.show(t('category.deleteSuccess'), 'success');
+        }).catch((error) => {
+          Toast.show(t('category.deleteError'), 'error');
+        });
+      },
+      onCancel: () => {}
+    });
   };
 
   const startEditing = (category: Category) => {

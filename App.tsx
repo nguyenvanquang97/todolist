@@ -8,6 +8,8 @@ import {ProjectProvider} from './src/context/ProjectContext';
 import notifee from '@notifee/react-native';
 import {RootStackNavigator, navigationRef} from '@/navigation/index';
 import changeNavigationBarColor from 'react-native-navigation-bar-color';
+import ToastContainer from './src/components/Toast';
+import { ConfirmDialogContainer } from './src/components/ConfirmDialog';
 
 // Component StatusBar tùy chỉnh theo theme
 const AppStatusBar: React.FC = () => {
@@ -96,6 +98,8 @@ const AppContent: React.FC = () => {
       >
         <RootStackNavigator />
       </NavigationContainer>
+      <ToastContainer />
+      <ConfirmDialogContainer />
     </>
   );
 };
