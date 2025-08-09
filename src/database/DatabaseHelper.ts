@@ -524,6 +524,23 @@ class DatabaseHelper {
     }
   }
 
+  public async getTaskById(taskId: number): Promise<Task | null> {
+    const selectQuery = 'SELECT * FROM tasks WHERE id = ? LIMIT 1;';
+
+    try {
+      const result = await this.database?.executeSql(selectQuery, [taskId]);
+      
+      if (result && result[0].rows.length > 0) {
+        return result[0].rows.item(0);
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error getting task by id:', error);
+      throw error;
+    }
+  }
+
   public async getTasksByCategory(categoryId: number): Promise<Task[]> {
     const selectQuery = 'SELECT * FROM tasks WHERE category_id = ? ORDER BY created_at DESC;';
 

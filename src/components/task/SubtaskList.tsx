@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
 import { Toast } from '@components/Toast';
 import { ConfirmDialog } from '@components/ConfirmDialog';
@@ -29,7 +29,27 @@ const SubtaskList: React.FC<SubtaskListProps> = ({ parentTaskId, subtasks: initi
   const [isAddingSubtask, setIsAddingSubtask] = useState(false);
   const [overallProgress, setOverallProgress] = useState(0);
 
-  const loadSubtasks = async () => {
+  // Định nghĩa calculateOverallProgress trước loadSubtasks để tránh circular dependency
+  const calculateOverallProgress = useCallback((tasks: Task[]) => {
+    if (tasks.length === 0) {
+      setOverallProgress(0);
+      return;
+    }
+
+    const completedTasks = tasks.filter(task => task.status === 'completed').length;
+    const progress = (completedTasks / tasks.length) * 100;
+    setOverallProgress(progress);
+
+    // Update parent task completion percentage
+    if (parentTaskId) {
+      updateTaskCompletion(parentTaskId, progress);
+    }
+    
+    // Không gọi onSubtasksChanged ở đây để tránh vòng lặp vô hạn
+    // onSubtasksChanged được gọi trực tiếp trong các hàm xử lý thay đổi subtask
+  }, [parentTaskId, updateTaskCompletion]);
+
+  const loadSubtasks = useCallback(async () => {
     if (!parentTaskId) return;
     
     setLoading(true);
@@ -47,10 +67,9 @@ const SubtaskList: React.FC<SubtaskListProps> = ({ parentTaskId, subtasks: initi
     } finally {
       setLoading(false);
     }
-  };
+  }, [parentTaskId, getSubtasks, onSubtasksChanged, calculateOverallProgress]);
   
   // Chỉ gọi loadSubtasks khi component mount hoặc khi parentTaskId/initialSubtasks thay đổi
-
   useEffect(() => {
     if (initialSubtasks) {
       setSubtasks(initialSubtasks);
@@ -58,26 +77,7 @@ const SubtaskList: React.FC<SubtaskListProps> = ({ parentTaskId, subtasks: initi
     } else {
       loadSubtasks();
     }
-  }, [parentTaskId, initialSubtasks]);
-
-  const calculateOverallProgress = (tasks: Task[]) => {
-    if (tasks.length === 0) {
-      setOverallProgress(0);
-      return;
-    }
-
-    const completedTasks = tasks.filter(task => task.status === 'completed').length;
-    const progress = (completedTasks / tasks.length) * 100;
-    setOverallProgress(progress);
-
-    // Update parent task completion percentage
-    if (parentTaskId) {
-      updateTaskCompletion(parentTaskId, progress);
-    }
-    
-    // Không gọi onSubtasksChanged ở đây để tránh vòng lặp vô hạn
-    // onSubtasksChanged được gọi trực tiếp trong các hàm xử lý thay đổi subtask
-  };
+  }, [parentTaskId, initialSubtasks, calculateOverallProgress, loadSubtasks]);
 
   const handleAddSubtask = async () => {
     if (!newSubtaskTitle.trim() || !parentTaskId) {

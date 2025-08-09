@@ -301,6 +301,20 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
     }
   };
 
+  const getTask = async (taskId: number): Promise<Task | null> => {
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      const task = await dbHelper.getTaskById(taskId);
+      return task;
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to get task' });
+      console.error('Get task error:', error);
+      return null;
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  };
+
   const filterTasks = async (filter: TaskFilter) => {
     try {
       dispatch({ type: 'SET_LOADING', payload: true });
@@ -531,6 +545,7 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
     loading: state.loading,
     error: state.error,
     loadTasks,
+    getTask,
     addTask,
     updateTask,
     deleteTask,

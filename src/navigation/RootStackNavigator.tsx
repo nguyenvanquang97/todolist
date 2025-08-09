@@ -24,7 +24,7 @@ export type RootStackParamList = {
     mode: 'add' | 'edit';
   };
   TaskDetail: {
-    task: Task;
+    taskId: number;
   };
   CategoryTagManagement: undefined;
   CategoryManagement: undefined;

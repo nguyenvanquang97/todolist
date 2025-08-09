@@ -175,7 +175,7 @@ const TaskListScreen: React.FC = () => {
 
   const handleTaskPress = useCallback(
     (task: Task) => {
-      navigation.navigate('TaskDetail' as any, {task});
+      navigation.navigate('TaskDetail' as any, {taskId: task.id});
     },
     [navigation],
   );

@@ -86,7 +86,7 @@ const ProjectDetailScreen: React.FC = () => {
     <View style={styles.taskItemContainer}>
       <MemoizedTaskItem 
         task={item} 
-        onPress={() => navigation.navigate('TaskDetail', { task: item })}
+        onPress={() => navigation.navigate('TaskDetail', { taskId: item.id })}
         onToggleStatus={() => {}}
         onDelete={() => {}}
       />

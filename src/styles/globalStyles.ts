@@ -203,7 +203,7 @@ const createGlobalStyles = (colors: any) => ({
     fontSize: fonts.sizes.xs,
     fontWeight: '600' as const,
     textTransform: 'uppercase' as const,
-    // Loại bỏ thuộc tính display không hợp lệ
+    display: 'none' as const,
   },
   priorityLow: {
     backgroundColor: colors.priority.low + '20',
