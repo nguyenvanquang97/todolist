@@ -1,0 +1,42 @@
+name: iOS Build
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  ios-build:
+    name: iOS Build
+    runs-on: macos-latest
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install CocoaPods
+        run: |
+          cd ios
+          pod install
+
+      - name: Build iOS App
+        run: |
+          cd ios
+          xcodebuild -workspace AwesomeProject.xcworkspace -scheme AwesomeProject -configuration Release -sdk iphoneos -archivePath $RUNNER_TEMP/AwesomeProject.xcarchive archive -allowProvisioningUpdates
+          xcodebuild -exportArchive -archivePath $RUNNER_TEMP/AwesomeProject.xcarchive -exportPath $RUNNER_TEMP/build -exportOptionsPlist ios/ExportOptions.plist
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-release-ios
+          path: ${{ runner.temp }}/build/AwesomeProject.ipa
