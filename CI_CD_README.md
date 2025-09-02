@@ -80,6 +80,12 @@ Các workflow đã được cấu hình với các cơ chế cache để tăng t
 
 Các cache này sẽ được tự động sử dụng lại giữa các lần chạy workflow, giúp giảm đáng kể thời gian build.
 
+## Phiên bản Actions
+
+- Các workflow sử dụng phiên bản v4 của `actions/upload-artifact` để tải lên các artifact (APK, IPA)
+- Phiên bản v4 cung cấp tốc độ tải lên và tải xuống nhanh hơn đến 98% so với các phiên bản trước
+- Phiên bản v3 của `actions/upload-artifact` sẽ bị ngừng hỗ trợ vào ngày 30 tháng 1 năm 2025
+
 ## Xử lý Xung đột Phụ thuộc
 
 - Các workflow đã được cấu hình để sử dụng flag `--legacy-peer-deps` với npm để giải quyết xung đột phụ thuộc giữa các package
