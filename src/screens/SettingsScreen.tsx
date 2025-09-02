@@ -123,6 +123,18 @@ const SettingsScreen: React.FC = () => {
         <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{t('settings.data')}</Text>
         <TouchableOpacity
           style={styles.settingItem}
+          onPress={() => NavigationService.navigate('BackupScreen')}
+        >
+          <View style={styles.settingInfo}>
+            <Icon name="save-outline" size={22} color={colors.text} />
+            <Text style={[styles.settingText, { color: colors.text }]}>
+              {t('settings.data.backup')}
+            </Text>
+          </View>
+          <Icon name="chevron-forward" size={20} color={colors.textSecondary} />
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.settingItem}
           onPress={handleClearData}
         >
           <View style={styles.settingInfo}>

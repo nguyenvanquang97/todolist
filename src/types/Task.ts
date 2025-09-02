@@ -103,3 +103,14 @@ export interface AppSettings {
   language: 'en' | 'vi';
   last_updated?: string;
 }
+
+export interface ExportData {
+  tasks: Task[];
+  categories: Category[];
+  tags: Tag[];
+  task_tags: TaskTag[];
+  projects: Project[];
+  settings: AppSettings;
+  version: string;
+  export_date: string;
+}

@@ -1,6 +1,7 @@
 import SQLite from 'react-native-sqlite-storage';
-import { Task, TaskFilter, DatabaseResult, AppSettings, Category, Tag, TaskTag, Project } from '../types/Task';
+import { Task, TaskFilter, DatabaseResult, AppSettings, Category, Tag, TaskTag, Project, ExportData } from '../types/Task';
 import SQLiteModule from 'react-native-sqlite-storage';
+import { Platform } from 'react-native';
 
 // Enable promise for SQLite
 SQLiteModule.enablePromise(true);
@@ -399,7 +400,7 @@ class DatabaseHelper {
     if (updateFields.length === 0) {
       throw new Error('No fields to update');
     }
-
+    
     // Add last_updated timestamp
     updateFields.push('last_updated = ?');
     values.push(new Date().toISOString());
@@ -997,6 +998,174 @@ class DatabaseHelper {
     // Việc cập nhật sẽ được thực hiện bởi TaskContext.updateTaskCompletion
     
     return averageCompletion;
+  }
+
+  public async exportData(): Promise<ExportData> {
+    try {
+      // Get all data from database
+      const tasks = await this.getAllTasks();
+      const categories = await this.getAllCategories();
+      const tags = await this.getAllTags();
+      const task_tags = await this.getAllTaskTags();
+      const projects = await this.getAllProjects();
+      const settings = await this.getSettings();
+      
+      // Create export data object
+      const exportData: ExportData = {
+        tasks,
+        categories,
+        tags,
+        task_tags,
+        projects,
+        settings,
+        version: '1.0',
+        export_date: new Date().toISOString()
+      };
+      
+      return exportData;
+    } catch (error) {
+      console.error('Error exporting data:', error);
+      throw error;
+    }
+  }
+  
+  public async importData(data: ExportData): Promise<boolean> {
+    try {
+      // Start transaction
+      await this.database?.executeSql('BEGIN TRANSACTION;');
+      
+      // Clear existing data
+      await this.database?.executeSql('DELETE FROM task_tags;');
+      await this.database?.executeSql('DELETE FROM tasks;');
+      await this.database?.executeSql('DELETE FROM categories;');
+      await this.database?.executeSql('DELETE FROM tags;');
+      await this.database?.executeSql('DELETE FROM projects;');
+      
+      // Reset auto-increment counters
+      await this.database?.executeSql('DELETE FROM sqlite_sequence WHERE name IN ("tasks", "categories", "tags", "projects");');
+      
+      // Import categories
+      for (const category of data.categories) {
+        const { id, ...categoryData } = category;
+        const insertQuery = `
+          INSERT INTO categories (id, name, color, icon, created_at)
+          VALUES (?, ?, ?, ?, ?);
+        `;
+        await this.database?.executeSql(insertQuery, [
+          id,
+          categoryData.name,
+          categoryData.color,
+          categoryData.icon || null,
+          categoryData.created_at || new Date().toISOString()
+        ]);
+      }
+      
+      // Import tags
+      for (const tag of data.tags) {
+        const { id, ...tagData } = tag;
+        const insertQuery = `
+          INSERT INTO tags (id, name, color, usage_count)
+          VALUES (?, ?, ?, ?);
+        `;
+        await this.database?.executeSql(insertQuery, [
+          id,
+          tagData.name,
+          tagData.color,
+          tagData.usage_count || 0
+        ]);
+      }
+      
+      // Import projects
+      for (const project of data.projects) {
+        const { id, ...projectData } = project;
+        const insertQuery = `
+          INSERT INTO projects (id, name, description, start_date, end_date, status, color, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+        `;
+        await this.database?.executeSql(insertQuery, [
+          id,
+          projectData.name,
+          projectData.description || null,
+          projectData.start_date || null,
+          projectData.end_date || null,
+          projectData.status,
+          projectData.color,
+          projectData.created_at || new Date().toISOString()
+        ]);
+      }
+      
+      // Import tasks
+      for (const task of data.tasks) {
+        const { id, ...taskData } = task;
+        const insertQuery = `
+          INSERT INTO tasks (id, title, description, due_date, priority, status, created_at, updated_at, category_id, project_id, parent_task_id, completion_percentage)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        `;
+        await this.database?.executeSql(insertQuery, [
+          id,
+          taskData.title,
+          taskData.description || null,
+          taskData.due_date || null,
+          taskData.priority,
+          taskData.status,
+          taskData.created_at || new Date().toISOString(),
+          taskData.updated_at || new Date().toISOString(),
+          taskData.category_id || null,
+          taskData.project_id || null,
+          taskData.parent_task_id || null,
+          taskData.completion_percentage || 0
+        ]);
+      }
+      
+      // Import task_tags
+      for (const taskTag of data.task_tags) {
+        const insertQuery = `
+          INSERT INTO task_tags (task_id, tag_id)
+          VALUES (?, ?);
+        `;
+        await this.database?.executeSql(insertQuery, [
+          taskTag.task_id,
+          taskTag.tag_id
+        ]);
+      }
+      
+      // Update settings if needed
+      if (data.settings) {
+        const { id, ...settingsData } = data.settings;
+        await this.updateSettings(settingsData);
+      }
+      
+      // Commit transaction
+      await this.database?.executeSql('COMMIT;');
+      
+      return true;
+    } catch (error) {
+      // Rollback transaction on error
+      await this.database?.executeSql('ROLLBACK;');
+      console.error('Error importing data:', error);
+      throw error;
+    }
+  }
+  
+  // Helper method to get all task tags
+  private async getAllTaskTags(): Promise<TaskTag[]> {
+    const query = 'SELECT task_id, tag_id FROM task_tags;';
+    
+    try {
+      const result = await this.database?.executeSql(query);
+      const taskTags: TaskTag[] = [];
+      
+      if (result && result[0].rows.length > 0) {
+        for (let i = 0; i < result[0].rows.length; i++) {
+          taskTags.push(result[0].rows.item(i));
+        }
+      }
+      
+      return taskTags;
+    } catch (error) {
+      console.error('Error getting all task tags:', error);
+      throw error;
+    }
   }
 
   public async closeDatabase(): Promise<void> {

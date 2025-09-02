@@ -60,6 +60,26 @@ export type TranslationKey =
   | 'settings.data'
   | 'settings.data.reset'
   | 'settings.data.reset.confirm'
+  | 'backup.title'
+  | 'backup.export'
+  | 'backup.import'
+  | 'backup.exportSuccess'
+  | 'backup.exportError'
+  | 'backup.importSuccess'
+  | 'backup.importError'
+  | 'backup.importConfirmTitle'
+  | 'backup.importConfirmMessage'
+  | 'backup.exportInfo'
+  | 'backup.importWarning'
+  | 'backup.exportButton'
+  | 'backup.importButton'
+  | 'backup.shareButton'
+  | 'backup.loading'
+  | 'backup.invalidFileFormat'
+  | 'backup.noExportFile'
+  | 'backup.shareNotImplemented'
+  | 'backup.findExportAt'
+  | 'backup.lookInDirectory'
   | 'settings.data.reset.cancel'
   | 'settings.data.reset.message'
   | 'settings.info'
@@ -230,7 +250,8 @@ export type TranslationKey =
   | 'project_description'
   | 'enter_project_description'
   | 'project_status'
-  | 'management.title';
+  | 'management.title'
+  | 'settings.data.backup';
 
 export type Translations = {
   [key in TranslationKey]: string;
