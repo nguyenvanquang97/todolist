@@ -69,3 +69,9 @@ Bạn có thể tùy chỉnh các workflow bằng cách chỉnh sửa các file 
 - Đảm bảo rằng bạn đã cấu hình đúng signing cho iOS trong file ExportOptions.plist
 - Đối với build production, bạn nên cấu hình signing key cho Android
 - Các secret như signing key, certificate nên được lưu trữ an toàn trong GitHub Secrets
+
+## Xử lý Xung đột Phụ thuộc
+
+- Các workflow đã được cấu hình để sử dụng flag `--legacy-peer-deps` với npm để giải quyết xung đột phụ thuộc giữa các package
+- Điều này đặc biệt cần thiết do xung đột giữa `@react-native-community/datetimepicker@8.0.0` (yêu cầu react-native ^0.73.0) và phiên bản react-native hiện tại (0.79.1)
+- Nếu bạn cập nhật các phụ thuộc, hãy kiểm tra lại các xung đột và điều chỉnh các workflow nếu cần
