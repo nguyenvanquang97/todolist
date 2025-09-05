@@ -47,6 +47,34 @@ export interface DatabaseResult {
   rowsAffected: number;
 }
 
+export interface TaskStatistics {
+  completedTasksCount: number;
+  pendingTasksCount: number;
+  totalTasksCount: number;
+  completionRate: number;
+  tasksByPriority: {
+    low: number;
+    medium: number;
+    high: number;
+    [key: string]: number;
+  };
+  // Có thể là mảng các đối tượng danh mục hoặc đối tượng Record
+  tasksByCategory: Array<{
+    categoryId: number;
+    categoryName: string;
+    categoryColor: string;
+    count: number;
+  }> | Record<string, number>;
+  // Thêm phiên bản dạng đối tượng để tương thích với kiểu dữ liệu cũ
+  tasksByCategoryObject?: Record<string, number>;
+  completionByDate: {
+    date: string;
+    count: number;
+  }[];
+  currentStreak: number;
+  longestStreak: number;
+}
+
 export interface TaskContextType {
   tasks: Task[];
   categories: Category[];
@@ -54,8 +82,11 @@ export interface TaskContextType {
   projects: Project[];
   loading: boolean;
   error: string | null;
+  filter: TaskFilter;
+  statistics: TaskStatistics | null;
   loadTasks: () => Promise<void>;
   getTask: (taskId: number) => Promise<Task | null>;
+  getTaskStatistics: () => Promise<TaskStatistics | null>;
   addTask: (task: Omit<Task, 'id' | 'created_at'>) => Promise<number | null>;
   updateTask: (id: number, task: Partial<Task>) => Promise<void>;
   deleteTask: (id: number) => Promise<void>;

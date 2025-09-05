@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode, useReducer, useCallback } from 'react';
-import { Task, TaskFilter, TaskContextType, Category, Tag, Project } from '../types/Task';
+import { Task, TaskFilter, TaskContextType, Category, Tag, Project, TaskStatistics } from '../types/Task';
 import DatabaseHelper from '@database/DatabaseHelper';
 import NotificationService from '@services/NotificationService';
 import { scheduleNotificationsForTasks } from '@utils/notificationHelper';
@@ -11,6 +11,7 @@ interface TaskState {
   projects: Project[];
   loading: boolean;
   error: string | null;
+  statistics: TaskStatistics | null;
 }
 
 type TaskAction =
@@ -33,7 +34,8 @@ type TaskAction =
   | { type: 'ADD_PROJECT'; payload: Project }
   | { type: 'UPDATE_PROJECT'; payload: { id: number; project: Partial<Project> } }
   | { type: 'DELETE_PROJECT'; payload: number }
-  | { type: 'UPDATE_TASK_COMPLETION'; payload: { id: number; completionPercentage: number } };
+  | { type: 'UPDATE_TASK_COMPLETION'; payload: { id: number; completionPercentage: number } }
+  | { type: 'SET_STATISTICS'; payload: TaskStatistics };
 
 const initialState: TaskState = {
   tasks: [],
@@ -42,6 +44,7 @@ const initialState: TaskState = {
   projects: [],
   loading: false,
   error: null,
+  statistics: null,
 };
 
 const taskReducer = (state: TaskState, action: TaskAction): TaskState => {
@@ -145,6 +148,11 @@ const taskReducer = (state: TaskState, action: TaskAction): TaskState => {
             : task
         ),
       };
+    case 'SET_STATISTICS':
+      return {
+        ...state,
+        statistics: action.payload,
+      };
     default:
       return state;
   }
@@ -229,6 +237,10 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
       const projects = await dbHelper.getAllProjects();
       dispatch({ type: 'SET_PROJECTS', payload: projects });
 
+      // Tải thống kê
+      const statistics = await dbHelper.getTaskStatistics();
+      dispatch({ type: 'SET_STATISTICS', payload: statistics });
+
       // Lên lịch thông báo cho tất cả các task chưa hoàn thành có ngày đến hạn
       await scheduleNotificationsForTasks(tasks);
     } catch (error) {
@@ -256,6 +268,9 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
         if (task.due_date) {
           await notificationService.scheduleNotification(newTask);
         }
+        
+        // Cập nhật thống kê sau khi thêm task
+        await getTaskStatistics();
         
         dispatch({ type: 'SET_LOADING', payload: false });
         return result.insertId; // Trả về ID của task vừa tạo
@@ -292,6 +307,9 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
         }
       }
 
+      // Cập nhật thống kê sau khi cập nhật task
+      await getTaskStatistics();
+
       dispatch({ type: 'SET_LOADING', payload: false });
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: 'Failed to update task' });
@@ -308,6 +326,10 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
       await notificationService.cancelNotification(id);
 
       dispatch({ type: 'DELETE_TASK', payload: id });
+      
+      // Cập nhật thống kê sau khi xóa task
+      await getTaskStatistics();
+      
       dispatch({ type: 'SET_LOADING', payload: false });
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: 'Failed to delete task' });
@@ -556,11 +578,26 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
           payload: { id: task.parent_task_id, completionPercentage: parentCompletion } 
         });
       }
+      
+      // Cập nhật thống kê sau khi cập nhật tiến độ công việc
+      await getTaskStatistics();
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: 'Failed to update task completion' });
       console.error('Update task completion error:', error);
     }
   }, [dbHelper, dispatch, state.tasks]);
+  
+  const getTaskStatistics = useCallback(async () => {
+    try {
+      const statistics = await dbHelper.getTaskStatistics();
+      dispatch({ type: 'SET_STATISTICS', payload: statistics });
+      return statistics;
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to get task statistics' });
+      console.error('Get task statistics error:', error);
+      return null;
+    }
+  }, [dbHelper, dispatch]);
 
   const value: TaskContextType = {
     tasks: state.tasks,
@@ -569,6 +606,8 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
     projects: state.projects,
     loading: state.loading,
     error: state.error,
+    statistics: state.statistics,
+    filter: { status: 'all', priority: 'all', searchQuery: '', category_id: 'all', project_id: 'all', show_subtasks: true },
     loadTasks,
     getTask,
     addTask,
@@ -670,6 +709,7 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
     // Subtask methods
     getSubtasks,
     updateTaskCompletion,
+    getTaskStatistics,
   };
 
   return <TaskContext.Provider value={value}>{children}</TaskContext.Provider>;

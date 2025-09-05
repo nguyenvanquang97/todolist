@@ -1,5 +1,5 @@
 import SQLite from 'react-native-sqlite-storage';
-import { Task, TaskFilter, DatabaseResult, AppSettings, Category, Tag, TaskTag, Project, ExportData } from '../types/Task';
+import { Task, TaskFilter, DatabaseResult, AppSettings, Category, Tag, TaskTag, Project, ExportData, TaskStatistics } from '../types/Task';
 import SQLiteModule from 'react-native-sqlite-storage';
 import { Platform } from 'react-native';
 
@@ -1045,6 +1045,211 @@ class DatabaseHelper {
     } catch (error) {
       console.error('Error exporting data:', error);
       throw error;
+    }
+  }
+  
+  // Phương thức lấy thống kê tổng quan về task
+  public async getTaskStatistics(): Promise<TaskStatistics> {
+    try {
+      // Đếm số lượng task theo trạng thái
+      const countQuery = `
+        SELECT 
+          COUNT(*) as total,
+          SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
+          SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending
+        FROM tasks;
+      `;
+      const countResult = await this.database?.executeSql(countQuery);
+      const countData = countResult?.[0].rows.item(0);
+      
+      // Đếm số lượng task theo mức độ ưu tiên
+      const priorityQuery = `
+        SELECT 
+          priority,
+          COUNT(*) as count
+        FROM tasks
+        GROUP BY priority;
+      `;
+      const priorityResult = await this.database?.executeSql(priorityQuery);
+      const priorityData = {
+        low: 0,
+        medium: 0,
+        high: 0
+      };
+      
+      for (let i = 0; i < priorityResult?.[0].rows.length; i++) {
+        const item = priorityResult?.[0].rows.item(i);
+        // Kiểm tra xem priority có phải là 'low', 'medium', hoặc 'high' không
+        if (item.priority === 'low' || item.priority === 'medium' || item.priority === 'high') {
+          priorityData[item.priority as keyof typeof priorityData] = item.count;
+        }
+      }
+      
+      // Đếm số lượng task theo danh mục và lấy thông tin màu sắc
+      const categoryQuery = `
+        SELECT 
+          c.id as categoryId,
+          c.name as categoryName,
+          c.color as categoryColor,
+          COUNT(t.id) as count
+        FROM categories c
+        LEFT JOIN tasks t ON c.id = t.category_id
+        GROUP BY c.id;
+      `;
+      const categoryResult = await this.database?.executeSql(categoryQuery);
+      const categoryData = [];
+      
+      for (let i = 0; i < categoryResult?.[0].rows.length; i++) {
+        categoryData.push(categoryResult?.[0].rows.item(i));
+      }
+      
+      // Lấy số lượng task hoàn thành theo ngày (30 ngày gần nhất)
+      const completionByDateQuery = `
+        SELECT 
+          date(updated_at) as date,
+          COUNT(*) as count
+        FROM tasks
+        WHERE status = 'completed'
+          AND updated_at IS NOT NULL
+          AND date(updated_at) >= date('now', '-30 days')
+        GROUP BY date(updated_at)
+        ORDER BY date(updated_at);
+      `;
+      const completionByDateResult = await this.database?.executeSql(completionByDateQuery);
+      const completionByDateData = [];
+      
+      for (let i = 0; i < completionByDateResult?.[0].rows.length; i++) {
+        completionByDateData.push(completionByDateResult?.[0].rows.item(i));
+      }
+      
+      // Tính streak hiện tại và streak dài nhất
+      const streakData = await this.calculateStreaks();
+      
+      // Tính tỷ lệ hoàn thành
+      const completedCount = countData.completed || 0;
+      const totalCount = countData.total || 0;
+      const completionRate = totalCount > 0 ? parseFloat(((completedCount / totalCount) * 100).toFixed(2)) : 0;
+      
+      // Chuyển đổi categoryData từ mảng sang đối tượng nếu cần
+      const tasksByCategoryObject: Record<string, number> = {};
+      categoryData.forEach((item: any) => {
+        if (item.categoryName) {
+          tasksByCategoryObject[item.categoryName] = item.count;
+        }
+      });
+
+      return {
+        completedTasksCount: countData.completed || 0,
+        pendingTasksCount: countData.pending || 0,
+        totalTasksCount: countData.total || 0,
+        completionRate: parseFloat(completionRate.toFixed(2)),
+        tasksByPriority: priorityData,
+        tasksByCategory: categoryData, // Giữ nguyên mảng để sử dụng cho biểu đồ danh mục
+        tasksByCategoryObject, // Thêm phiên bản dạng đối tượng để tương thích với kiểu dữ liệu cũ
+        completionByDate: completionByDateData,
+        currentStreak: streakData.currentStreak,
+        longestStreak: streakData.longestStreak
+      };
+    } catch (error) {
+      console.error('Error getting task statistics:', error);
+      throw error;
+    }
+  }
+  
+  // Phương thức tính streak (số ngày liên tiếp hoàn thành ít nhất 1 task)
+  private async calculateStreaks(): Promise<{currentStreak: number, longestStreak: number}> {
+    try {
+      // Lấy danh sách các ngày có task được hoàn thành
+      const completedDatesQuery = `
+        SELECT DISTINCT date(updated_at) as date
+        FROM tasks
+        WHERE status = 'completed'
+          AND updated_at IS NOT NULL
+        ORDER BY date DESC;
+      `;
+      const completedDatesResult = await this.database?.executeSql(completedDatesQuery);
+      
+      if (completedDatesResult?.[0].rows.length === 0) {
+        return { currentStreak: 0, longestStreak: 0 };
+      }
+      
+      const dates = [];
+      for (let i = 0; i < completedDatesResult?.[0].rows.length; i++) {
+        dates.push(completedDatesResult?.[0].rows.item(i).date);
+      }
+      
+      // Tính streak hiện tại
+      let currentStreak = 0;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const todayStr = today.toISOString().split('T')[0];
+      const yesterdayStr = new Date(today.getTime() - 86400000).toISOString().split('T')[0];
+      
+      // Kiểm tra xem hôm nay đã hoàn thành task chưa
+      if (dates[0] === todayStr) {
+        currentStreak = 1;
+        // Kiểm tra các ngày liên tiếp trước đó
+        for (let i = 1; i < dates.length; i++) {
+          const currentDate = new Date(dates[i-1]);
+          const prevDate = new Date(dates[i]);
+          
+          const diffTime = currentDate.getTime() - prevDate.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          
+          if (diffDays === 1) {
+            currentStreak++;
+          } else {
+            break;
+          }
+        }
+      } 
+      // Kiểm tra xem hôm qua đã hoàn thành task chưa (và hôm nay chưa hoàn thành)
+      else if (dates[0] === yesterdayStr) {
+        currentStreak = 1;
+        // Kiểm tra các ngày liên tiếp trước đó
+        for (let i = 1; i < dates.length; i++) {
+          const currentDate = new Date(dates[i-1]);
+          const prevDate = new Date(dates[i]);
+          
+          const diffTime = currentDate.getTime() - prevDate.getTime();
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          
+          if (diffDays === 1) {
+            currentStreak++;
+          } else {
+            break;
+          }
+        }
+      } else {
+        currentStreak = 0;
+      }
+      
+      // Tính streak dài nhất
+      let longestStreak = 0;
+      let currentLongest = 1;
+      
+      for (let i = 1; i < dates.length; i++) {
+        const currentDate = new Date(dates[i-1]);
+        const prevDate = new Date(dates[i]);
+        
+        const diffTime = currentDate.getTime() - prevDate.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays === 1) {
+          currentLongest++;
+        } else {
+          longestStreak = Math.max(longestStreak, currentLongest);
+          currentLongest = 1;
+        }
+      }
+      
+      longestStreak = Math.max(longestStreak, currentLongest);
+      
+      return { currentStreak, longestStreak };
+    } catch (error) {
+      console.error('Error calculating streaks:', error);
+      return { currentStreak: 0, longestStreak: 0 };
     }
   }
   

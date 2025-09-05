@@ -8,10 +8,12 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import {useTranslation} from '@i18n/i18n';
 import TaskListScreen from '@/screens/TaskListScreen';
 import ManagementScreen from '@/screens/ManagementScreen';
+import StatisticsScreen from '@/screens/StatisticsScreen';
 
 export type RootTabParamList = {
   TaskList: undefined | {screen: string; params?: any};
   Management: undefined;
+  Statistics: undefined;
   Settings: undefined;
 };
 
@@ -34,6 +36,8 @@ const getTabBarIcon = (route: string) => {
       iconName = focused ? 'list' : 'list-outline';
     } else if (route === 'Management') {
       iconName = focused ? 'folder' : 'folder-outline';
+    } else if (route === 'Statistics') {
+      iconName = focused ? 'bar-chart' : 'bar-chart-outline';
     } else if (route === 'Settings') {
       iconName = focused ? 'settings' : 'settings-outline';
     }
@@ -78,6 +82,21 @@ const BottomTabNavigator: React.FC = () => {
         component={ManagementScreen}
         options={{
           title: t('settings.organization'),
+          headerShown: true,
+          headerStyle: {
+            backgroundColor: colors.bg_primary,
+          },
+          headerTintColor: baseColors.white,
+          headerTitleStyle: {
+            fontWeight: 'bold' as const,
+          },
+        }}
+      />
+      <Tab.Screen
+        name="Statistics"
+        component={StatisticsScreen}
+        options={{
+          title: t('statistics.title'),
           headerShown: true,
           headerStyle: {
             backgroundColor: colors.bg_primary,

@@ -121,7 +121,7 @@ const BackupScreen: React.FC = () => {
       }
 
       // Parse JSON
-      let importData;
+      let importData: ExportData;
       try {
         importData = JSON.parse(fileContent) as ExportData;
       } catch (parseError) {
