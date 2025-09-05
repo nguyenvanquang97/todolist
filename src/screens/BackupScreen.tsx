@@ -12,6 +12,8 @@ import {
 import {Toast} from '@components/Toast';
 import Icon from 'react-native-vector-icons/Ionicons';
 import {useTheme} from '@context/ThemeContext';
+import {useTaskContext} from '@context/TaskContext';
+import {useSettings} from '@context/SettingsContext';
 import {spacing, borderRadius, fonts, baseColors} from '@styles/theme';
 import {useTranslation} from '@i18n/index';
 import {NavigationService} from '@navigation/index';
@@ -25,6 +27,8 @@ const BackupScreen: React.FC = () => {
   const {t} = useTranslation();
   const [loading, setLoading] = useState(false);
   const [exportPath, setExportPath] = useState<string | null>(null);
+  const {loadTasks} = useTaskContext();
+  const {loadSettings} = useSettings();
 
   const dbHelper = DatabaseHelper.getInstance();
 
@@ -49,7 +53,7 @@ const BackupScreen: React.FC = () => {
         path =
           Platform.OS === 'ios'
             ? `${RNFS.DocumentDirectoryPath}/${fileName}`
-            : `${RNFS.ExternalDirectoryPath}/${fileName}`;
+            : `${RNFS.DownloadDirectoryPath}/${fileName}`;
       } catch (pathError) {
         console.error('Path error:', pathError);
         throw new Error('Failed to determine file path');
@@ -57,7 +61,7 @@ const BackupScreen: React.FC = () => {
 
       // Chuyển đổi dữ liệu thành JSON string
       const jsonData = JSON.stringify(exportData, null, 2);
-      console.log('path', path);
+   
       // Ghi file
       await RNFS.writeFile(path, jsonData, 'utf8');
 
@@ -78,7 +82,7 @@ const BackupScreen: React.FC = () => {
       // Xác định thư mục đã lưu file export
       const exportDirectory = Platform.OS === 'ios'
         ? RNFS.DocumentDirectoryPath
-        : RNFS.ExternalDirectoryPath;
+        : RNFS.DownloadDirectoryPath;
 
       // Hiển thị thông báo cho người dùng về vị trí file export
       if (exportPath) {
@@ -108,6 +112,7 @@ const BackupScreen: React.FC = () => {
       let fileContent;
       try {
         fileContent = await RNFS.readFile(result[0].uri, 'utf8');
+        console.log('File content:', fileContent);
       } catch (readError) {
         console.error('File read error:', readError);
         Toast.show(t('backup.importError'), 'error');
@@ -170,6 +175,13 @@ const BackupScreen: React.FC = () => {
                 // Import dữ liệu vào database
                 await dbHelper.importData(importData);
                 Toast.show(t('backup.importSuccess'), 'success');
+                
+                // Tải lại danh sách công việc và cài đặt
+                await loadTasks();
+                await loadSettings();
+                
+                // Chuyển về màn hình danh sách công việc thông qua BottomTabNavigator
+                NavigationService.navigate('BottomTabNavigator', { screen: 'TaskList' });
               } catch (error) {
                 console.error('Import error:', error);
                 Toast.show(t('backup.importError'), 'error');

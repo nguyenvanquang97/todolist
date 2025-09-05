@@ -1,5 +1,5 @@
 export interface Task {
-  id?: number;
+  id?: number ;
   title: string;
   description?: string;
   due_date?: string;
@@ -7,8 +7,8 @@ export interface Task {
   status: 'pending' | 'completed';
   created_at?: string;
   updated_at?: string;
-  category_id?: number;
-  project_id?: number;
+  category_id?: number | null;
+  project_id?: number | null | undefined;
   parent_task_id?: number;
   completion_percentage?: number;
 }
@@ -79,7 +79,7 @@ export interface TaskContextType {
   addProject: (project: Omit<Project, 'id' | 'created_at'>) => Promise<number | null>;
   updateProject: (id: number, project: Partial<Project>) => Promise<void>;
   deleteProject: (id: number) => Promise<void>;
-  updateTaskProject: (taskId: number, projectId: number | null) => Promise<void>;
+  updateTaskProject: (taskId: number, projectId: number | null | undefined) => Promise<void>;
   // Subtask methods
   getSubtasks: (parentTaskId: number) => Promise<Task[]>;
   updateTaskCompletion: (taskId: number, completionPercentage: number) => Promise<void>;

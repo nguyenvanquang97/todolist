@@ -50,8 +50,8 @@ const ProjectDetailScreen: React.FC = () => {
 
   const handleEditProject = () => {
     if (project) {
-      // Sử dụng as any để tránh lỗi TypeScript
-      (navigation as any).navigate('ProjectManagement');
+      // Sử dụng kiểu đúng cho navigation
+      navigation.navigate('ProjectManagement');
       // In a real implementation, you would navigate to edit mode with the project ID
       // navigation.navigate('EditProject', { projectId: project.id });
     }

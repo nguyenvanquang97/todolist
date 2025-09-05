@@ -47,6 +47,7 @@ class DatabaseHelper {
         priority TEXT,
         status TEXT,
         created_at TEXT,
+        updated_at TEXT,
         category_id INTEGER,
         project_id INTEGER,
         parent_task_id INTEGER,
@@ -182,6 +183,18 @@ class DatabaseHelper {
         await this.database?.executeSql(alterTableQuery);
         console.log('Added completion_percentage column to tasks table');
       }
+
+      // Check if updated_at column exists in tasks table
+      try {
+        const checkUpdatedAtQuery = 'SELECT updated_at FROM tasks LIMIT 1;';
+        await this.database?.executeSql(checkUpdatedAtQuery);
+        console.log('updated_at column already exists');
+      } catch (e) {
+        // updated_at column doesn't exist, add it
+        const alterTableQuery = 'ALTER TABLE tasks ADD COLUMN updated_at TEXT;';
+        await this.database?.executeSql(alterTableQuery);
+        console.log('Added updated_at column to tasks table');
+      }
     } catch (error) {
       console.error('Error checking and updating schema:', error);
       throw error;
@@ -190,18 +203,19 @@ class DatabaseHelper {
 
   public async insertTask(task: Omit<Task, 'id' | 'created_at'>): Promise<DatabaseResult> {
     const insertQuery = `
-      INSERT INTO tasks (title, description, due_date, priority, status, created_at, category_id, project_id, parent_task_id, completion_percentage)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+      INSERT INTO tasks (title, description, due_date, priority, status, created_at, updated_at, category_id, project_id, parent_task_id, completion_percentage)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     `;
 
-    const createdAt = new Date().toISOString();
+    const currentTime = new Date().toISOString();
     const values = [
       task.title,
       task.description || null,
       task.due_date || null,
       task.priority,
       task.status,
-      createdAt,
+      currentTime, // created_at
+      currentTime, // updated_at
       task.category_id || null,
       task.project_id || null,
       task.parent_task_id || null,
@@ -244,14 +258,19 @@ class DatabaseHelper {
     const updateFields: string[] = [];
     const values: any[] = [];
 
+    // Tự động thêm updated_at với thời gian hiện tại
+    const currentTime = new Date().toISOString();
+    updateFields.push('updated_at = ?');
+    values.push(currentTime);
+
     Object.entries(task).forEach(([key, value]) => {
-      if (key !== 'id' && value !== undefined) {
+      if (key !== 'id' && key !== 'updated_at' && value !== undefined) {
         updateFields.push(`${key} = ?`);
         values.push(value);
       }
     });
 
-    if (updateFields.length === 0) {
+    if (updateFields.length === 1 && updateFields[0] === 'updated_at = ?') {
       throw new Error('No fields to update');
     }
 
@@ -925,7 +944,7 @@ class DatabaseHelper {
     }
   }
 
-  public async updateTaskProject(taskId: number, projectId: number | null): Promise<DatabaseResult> {
+  public async updateTaskProject(taskId: number, projectId: number | null | undefined): Promise<DatabaseResult> {
     const updateQuery = 'UPDATE tasks SET project_id = ? WHERE id = ?;';
 
     try {

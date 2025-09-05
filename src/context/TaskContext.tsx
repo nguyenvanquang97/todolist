@@ -18,7 +18,7 @@ type TaskAction =
   | { type: 'SET_TASKS'; payload: Task[] }
   | { type: 'SET_ERROR'; payload: string | null }
   | { type: 'ADD_TASK'; payload: Task }
-  | { type: 'UPDATE_TASK'; payload: { id: number; task: Partial<Task> } }
+  | { type: 'UPDATE_TASK'; payload: { id: number ; task: Partial<Task> } }
   | { type: 'DELETE_TASK'; payload: number }
   | { type: 'CLEAR_ERROR' }
   | { type: 'SET_CATEGORIES'; payload: Category[] }
@@ -30,6 +30,9 @@ type TaskAction =
   | { type: 'UPDATE_TAG'; payload: { id: number; tag: Partial<Tag> } }
   | { type: 'DELETE_TAG'; payload: number }
   | { type: 'SET_PROJECTS'; payload: Project[] }
+  | { type: 'ADD_PROJECT'; payload: Project }
+  | { type: 'UPDATE_PROJECT'; payload: { id: number; project: Partial<Project> } }
+  | { type: 'DELETE_PROJECT'; payload: number }
   | { type: 'UPDATE_TASK_COMPLETION'; payload: { id: number; completionPercentage: number } };
 
 const initialState: TaskState = {
@@ -111,6 +114,28 @@ const taskReducer = (state: TaskState, action: TaskAction): TaskState => {
       };
     case 'SET_PROJECTS':
       return { ...state, projects: action.payload };
+    case 'ADD_PROJECT':
+      return { ...state, projects: [action.payload, ...state.projects] };
+    case 'UPDATE_PROJECT':
+      return {
+        ...state,
+        projects: state.projects.map(project =>
+          project.id === action.payload.id
+            ? { ...project, ...action.payload.project }
+            : project
+        ),
+      };
+    case 'DELETE_PROJECT':
+      return {
+        ...state,
+        projects: state.projects.filter(project => project.id !== action.payload),
+        // Update tasks that had this project to have undefined project_id
+        tasks: state.tasks.map(task =>
+          task.project_id === action.payload
+            ? { ...task, project_id: undefined }
+            : task
+        ),
+      };
     case 'UPDATE_TASK_COMPLETION':
       return {
         ...state,
@@ -379,7 +404,7 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
       await dbHelper.updateTaskCategory(taskId, categoryId);
       dispatch({
         type: 'UPDATE_TASK',
-        payload: { id: taskId, task: { category_id: categoryId === null ? undefined : categoryId } },
+        payload: { id: taskId, task: { category_id: categoryId } },
       });
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: 'Failed to update task category' });
@@ -556,11 +581,83 @@ export const TaskProvider: React.FC<TaskProviderProps> = ({ children }) => {
     addCategory,
     updateCategory,
     // Project methods
-    loadProjects: loadTasks,
-    addProject: async () => null,
-    updateProject: async () => {},
-    deleteProject: async () => {},
-    updateTaskProject: async () => {},
+    loadProjects: async () => {
+      try {
+        dispatch({ type: 'SET_LOADING', payload: true });
+        const projects = await dbHelper.getAllProjects();
+        dispatch({ type: 'SET_PROJECTS', payload: projects });
+      } catch (error) {
+        dispatch({ type: 'SET_ERROR', payload: 'Failed to load projects' });
+        console.error('Load projects error:', error);
+      } finally {
+        dispatch({ type: 'SET_LOADING', payload: false });
+      }
+    },
+    addProject: async (project: Omit<Project, 'id' | 'created_at'>) => {
+      try {
+        dispatch({ type: 'SET_LOADING', payload: true });
+        const result = await dbHelper.insertProject(project);
+
+        if (result.insertId) {
+          const newProject: Project = {
+            ...project,
+            id: result.insertId,
+            created_at: new Date().toISOString(),
+          };
+          dispatch({ type: 'ADD_PROJECT', payload: newProject });
+          dispatch({ type: 'SET_LOADING', payload: false });
+          return result.insertId; // Return the ID of the newly created project
+        }
+        dispatch({ type: 'SET_LOADING', payload: false });
+        return null;
+      } catch (error) {
+        dispatch({ type: 'SET_ERROR', payload: 'Failed to add project' });
+        console.error('Add project error:', error);
+        return null;
+      }
+    },
+    updateProject: async (id: number, project: Partial<Project>) => {
+      try {
+        dispatch({ type: 'SET_LOADING', payload: true });
+        await dbHelper.updateProject(id, project);
+        dispatch({ type: 'UPDATE_PROJECT', payload: { id, project } });
+      } catch (error) {
+        dispatch({ type: 'SET_ERROR', payload: 'Failed to update project' });
+        console.error('Update project error:', error);
+      } finally {
+        dispatch({ type: 'SET_LOADING', payload: false });
+      }
+    },
+    deleteProject: async (id: number) => {
+      try {
+        dispatch({ type: 'SET_LOADING', payload: true });
+        await dbHelper.deleteProject(id);
+        dispatch({ type: 'DELETE_PROJECT', payload: id });
+      } catch (error) {
+        dispatch({ type: 'SET_ERROR', payload: 'Failed to delete project' });
+        console.error('Delete project error:', error);
+      } finally {
+        dispatch({ type: 'SET_LOADING', payload: false });
+      }
+    },
+    updateTaskProject: async (taskId: number, projectId: number | null | undefined) => {
+      try {
+        dispatch({ type: 'SET_LOADING', payload: true });
+        await dbHelper.updateTaskProject(taskId, projectId);
+        dispatch({ 
+          type: 'UPDATE_TASK', 
+          payload: { 
+            id: taskId, 
+            task: { project_id: projectId } 
+          } 
+        });
+      } catch (error) {
+        dispatch({ type: 'SET_ERROR', payload: 'Failed to update task project' });
+        console.error('Update task project error:', error);
+      } finally {
+        dispatch({ type: 'SET_LOADING', payload: false });
+      }
+    },
     deleteCategory,
     updateTaskCategory,
     // Tag methods

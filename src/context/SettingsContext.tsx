@@ -12,6 +12,7 @@ interface SettingsContextType {
   updateNotifications: (enabled: boolean) => Promise<void>;
   updateLanguage: (language: 'en' | 'vi') => Promise<void>;
   resetSettings: () => Promise<void>;
+  loadSettings: () => Promise<void>;
   clearError: () => void;
 }
 
@@ -119,6 +120,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         updateNotifications,
         updateLanguage,
         resetSettings,
+        loadSettings,
         clearError,
       }}
     >

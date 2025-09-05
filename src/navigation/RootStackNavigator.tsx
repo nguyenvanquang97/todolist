@@ -18,7 +18,7 @@ import {Task} from '@/types/Task';
 import BottomTabNavigator from './BottomTabNavigator';
 
 export type RootStackParamList = {
-  BottomTabNavigator: undefined;
+  BottomTabNavigator: undefined | {screen: string; params?: any};
   TaskList: undefined;
   AddEditTask: {
     task?: Task;
